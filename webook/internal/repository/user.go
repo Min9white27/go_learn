@@ -41,8 +41,17 @@ func (r *UserRepository) FindByEmail(ctx context.Context, email string) (domain.
 	}, nil
 }
 
-func (r *UserRepository) FindById(int64) {
+func (r *UserRepository) FindById(ctx context.Context, id int64) (domain.User, error) {
 	//先从 cache 缓存里面找
 	//再从 dao 里面找
 	//找到了回写 cache 缓存
+	u, err := r.dao.FindById(ctx, id)
+	if err != nil {
+		return domain.User{}, err
+	}
+	return domain.User{
+		Nickname:        u.Nickname,
+		Birthday:        u.Birthday,
+		PersonalProfile: u.PersonalProfile,
+	}, nil
 }

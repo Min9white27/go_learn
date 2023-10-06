@@ -7,6 +7,7 @@ import (
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"time"
 )
 
 // UserHandler 准备在这上面定义跟用户有关的路由
@@ -126,17 +127,32 @@ func (u *UserHandler) Login(ctx *gin.Context) {
 }
 
 func (u *UserHandler) Edit(ctx *gin.Context) {
-	//type EditReq struct {
-	//	Nickname        string `json:"nickname"`
-	//	Birthday        string `json:"birthday"`
-	//	PersonalProfile string `json:"personalProfile"`
-	//}
-	//
-	//var req EditReq
-	//if err := ctx.Bind(&req); err != nil {
-	//	return
-	//}
+	type EditReq struct {
+		Nickname        string `json:"nickname"`
+		Birthday        string `json:"birthday"`
+		PersonalProfile string `json:"personalProfile"`
+	}
 
+	var req EditReq
+	if err := ctx.Bind(&req); err != nil {
+		return
+	}
+	if req.Nickname == "" {
+		ctx.String(http.StatusOK, "昵称不能为空")
+		return
+	}
+	if len(req.PersonalProfile) > 1024 {
+		ctx.String(http.StatusOK, "个人简介不能过长")
+	}
+	// DateOnly 可以将生日的格式转化成 “2006-01-02 ”，并返回
+	brithday, err := time.Parse(time.DateOnly, req.Birthday)
+	if err != nil {
+		// 这里其实没有直接校验生日的具体格式，而是检查生日能够转化过来，就说明没有问题
+		ctx.String(http.StatusOK, "日期格式不对")
+	}
+	sess := sessions.Default(ctx)
+	id := sess.Get("userId").(int64)
+	u,err:=u.svc.
 }
 
 func (u *UserHandler) Profile(ctx *gin.Context) {

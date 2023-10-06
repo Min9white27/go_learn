@@ -46,6 +46,12 @@ func (dao *UserDAO) FindByEmail(ctx context.Context, email string) (User, error)
 	return u, err
 }
 
+func (dao *UserDAO) FindById(ctx context.Context, id int64) (User, error) {
+	var u User
+	err := dao.db.WithContext(ctx).Where("id = ?").First(&u).Error
+	return u, err
+}
+
 // User 直接对应于数据库表结构
 // 有些人叫做 entity,有些人叫做 model 也有人叫做 PO(persistent object)
 type User struct {
@@ -58,6 +64,10 @@ type User struct {
 	Password string
 
 	// 	往这里面加
+	Nickname string
+	Birthday int64
+	// 指定是 varchar 这个类型的，并且长度是 1024
+	PersonalProfile string `gorm:"type=varchar(1024)"`
 
 	//创建时间，毫秒数
 	Ctime int64

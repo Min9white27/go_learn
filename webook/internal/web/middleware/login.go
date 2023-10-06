@@ -22,15 +22,15 @@ func (l *LoginMiddlewareBuilder) IgnorePaths(path string) *LoginMiddlewareBuilde
 func (l *LoginMiddlewareBuilder) Build() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		//不需要登录校验的
-		for _, path := range l.paths {
-			if ctx.Request.URL.Path == path {
-				return
-			}
-		}
-		//不需要登录校验的
-		//if ctx.Request.URL.Path == "/users/signup" || ctx.Request.URL.Path == "/users/login" {
-		//	return
+		//for _, path := range l.paths {
+		//	if ctx.Request.URL.Path == path {
+		//		return
+		//	}
 		//}
+		//不需要登录校验的
+		if ctx.Request.URL.Path == "/users/signup" || ctx.Request.URL.Path == "/users/login" {
+			return
+		}
 		sess := sessions.Default(ctx)
 		id := sess.Get("userId")
 		if id != nil {
