@@ -4,6 +4,7 @@ import (
 	"context"
 	"gitee.com/geektime-geekbang_admin/geektime-basic-go/webook/internal/domain"
 	"gitee.com/geektime-geekbang_admin/geektime-basic-go/webook/internal/repository/dao"
+	"time"
 )
 
 var (
@@ -41,17 +42,39 @@ func (r *UserRepository) FindByEmail(ctx context.Context, email string) (domain.
 	}, nil
 }
 
-func (r *UserRepository) FindById(ctx context.Context, id int64) (domain.User, error) {
+func (r *UserRepository) FindById(ctx context.Context, uid int64) (domain.User, error) {
 	//先从 cache 缓存里面找
 	//再从 dao 里面找
 	//找到了回写 cache 缓存
-	u, err := r.dao.FindById(ctx, id)
+	u, err := r.dao.FindById(ctx, uid)
 	if err != nil {
 		return domain.User{}, err
 	}
+	return r.toDomain(u), nil
+}
+
+func (r *UserRepository) UpdateNonZeroFields(ctx context.Context, user domain.User) error {
+	return r.dao.UpdateByUid(ctx, r.toEntity(user))
+}
+
+func (r *UserRepository) toDomain(u dao.User) domain.User {
 	return domain.User{
+		Id:              u.Id,
+		Email:           u.Email,
+		Password:        u.Password,
 		Nickname:        u.Nickname,
-		Birthday:        u.Birthday,
+		Birthday:        time.UnixMilli(u.Birthday),
 		PersonalProfile: u.PersonalProfile,
-	}, nil
+	}
+}
+
+func (r *UserRepository) toEntity(u domain.User) dao.User {
+	return dao.User{
+		Id:              u.Id,
+		Email:           u.Email,
+		Password:        u.Password,
+		Nickname:        u.Nickname,
+		Birthday:        u.Birthday.UnixMilli(),
+		PersonalProfile: u.PersonalProfile,
+	}
 }

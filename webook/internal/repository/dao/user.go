@@ -46,10 +46,20 @@ func (dao *UserDAO) FindByEmail(ctx context.Context, email string) (User, error)
 	return u, err
 }
 
-func (dao *UserDAO) FindById(ctx context.Context, id int64) (User, error) {
+func (dao *UserDAO) FindById(ctx context.Context, uid int64) (User, error) {
 	var u User
-	err := dao.db.WithContext(ctx).Where("id = ?").First(&u).Error
+	err := dao.db.WithContext(ctx).Where("id = ?", uid).First(&u).Error
 	return u, err
+}
+
+func (dao *UserDAO) UpdateByUid(ctx context.Context, entity User) error {
+	return dao.db.WithContext(ctx).Model(&entity).Where("id = ?", entity.Id).
+		Updates(map[string]any{
+			"utime":            time.Now().UnixMilli(),
+			"nickname":         entity.Nickname,
+			"birthday":         entity.Birthday,
+			"personal_profile": entity.PersonalProfile,
+		}).Error
 }
 
 // User 直接对应于数据库表结构
@@ -64,10 +74,10 @@ type User struct {
 	Password string
 
 	// 	往这里面加
-	Nickname string
+	Nickname string `gorm:"type=varchar(128)"`
 	Birthday int64
 	// 指定是 varchar 这个类型的，并且长度是 1024
-	PersonalProfile string `gorm:"type=varchar(1024)"`
+	PersonalProfile string `gorm:"type=varchar(4096)"`
 
 	//创建时间，毫秒数
 	Ctime int64

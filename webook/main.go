@@ -8,7 +8,7 @@ import (
 	"gitee.com/geektime-geekbang_admin/geektime-basic-go/webook/internal/web/middleware"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/sessions"
-	"github.com/gin-contrib/sessions/cookie"
+	"github.com/gin-contrib/sessions/redis"
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -57,11 +57,21 @@ func initWebServer() *gin.Engine {
 		MaxAge: 12 * time.Hour,
 	}))
 
-	store := cookie.NewStore([]byte("secret"))
+	//store := cookie.NewStore([]byte("secret"))
+	//store := memstore.NewStore([]byte("^dg#Wx%vaw8D$OBIRT4AXolVhiM103fN"),
+	//	[]byte("!YwTy&F^mBG@4gZ1WDEna9je#chOslQz"))
+
+	store, err := redis.NewStore(16, "tcp", "localhost:6379", "",
+		[]byte("^dg#Wx%vaw8D$OBIRT4AXolVhiM103fN"), []byte("!YwTy&F^mBG@4gZ1WDEna9je#chOslQz"))
+	if err != nil {
+		panic(err)
+	}
+
 	server.Use(sessions.Sessions("mysession", store))
 	//server.Use(middleware.NewLoginMiddlewareBuilder().
 	//	IgnorePaths("users/signup").IgnorePaths("users/login").Build())
-	server.Use(middleware.NewLoginMiddlewareBuilder().Build())
+	server.Use(middleware.NewLoginMiddlewareBuilder().
+		IgnorePaths("/users/signup").IgnorePaths("/users/login").Build())
 	return server
 }
 
