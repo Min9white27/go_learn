@@ -44,7 +44,8 @@ func initWebServer() *gin.Engine {
 		// AllowMethods 不写表示全都包括在内
 		//AllowMethods:  []string{"POST", "GET"},
 		AllowHeaders: []string{"Content-Type", "Authorization"},
-		//ExposeHeaders: []string{"Origin"},
+		// 不加 ExposeHeaders ，前端是拿不到你的token
+		ExposeHeaders: []string{"x-jwt-token"},
 		// AllowCredentials 是否允许你带 cookie 之类的东西
 		AllowCredentials: true,
 		AllowOriginFunc: func(origin string) bool {
@@ -61,16 +62,22 @@ func initWebServer() *gin.Engine {
 	//store := memstore.NewStore([]byte("^dg#Wx%vaw8D$OBIRT4AXolVhiM103fN"),
 	//	[]byte("!YwTy&F^mBG@4gZ1WDEna9je#chOslQz"))
 
+	//第一个参数是最大空闲连接数量
+	//第二个就是 tcp ，不太可能用udp
+	//第三、四个就是连接信息和密码
+	//第五、六个就是两个key:Authentication 是指身份认证，Encryption 是指数据加密
 	store, err := redis.NewStore(16, "tcp", "localhost:6379", "",
 		[]byte("^dg#Wx%vaw8D$OBIRT4AXolVhiM103fN"), []byte("!YwTy&F^mBG@4gZ1WDEna9je#chOslQz"))
 	if err != nil {
 		panic(err)
 	}
 
+	//myStore := &sqlx_store.Store{}
+
 	server.Use(sessions.Sessions("mysession", store))
 	//server.Use(middleware.NewLoginMiddlewareBuilder().
-	//	IgnorePaths("users/signup").IgnorePaths("users/login").Build())
-	server.Use(middleware.NewLoginMiddlewareBuilder().
+	//IgnorePaths("/users/signup").IgnorePaths("/users/login").Build())
+	server.Use(middleware.NewLoginJWTMiddlewareBuilder().
 		IgnorePaths("/users/signup").IgnorePaths("/users/login").Build())
 	return server
 }

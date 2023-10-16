@@ -1,17 +1,18 @@
 package web
 
 import (
+	"fmt"
 	"gitee.com/geektime-geekbang_admin/geektime-basic-go/webook/internal/domain"
 	"gitee.com/geektime-geekbang_admin/geektime-basic-go/webook/internal/service"
 	regexp "github.com/dlclark/regexp2"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
+	jwt "github.com/golang-jwt/jwt/v5"
 	"github.com/pkg/errors"
 	"net/http"
 )
 
-//var JWTKey = []byte("k6CswdUm77WKcbM68UQUuxVsHSpTCwgK")
+var JWTKey = []byte("k6CswdUm77WKcbM68UQUuxVsHSpTCwgK")
 
 // UserHandler 准备在这上面定义跟用户有关的路由
 type UserHandler struct {
@@ -34,16 +35,18 @@ func NewUserHandler(svc *service.UserService) *UserHandler {
 	}
 }
 
-func (h *UserHandler) RegisterRoutes(server *gin.Engine) {
+func (u *UserHandler) RegisterRoutes(server *gin.Engine) {
 	ug := server.Group("/users")
 	//用分组路由来简化注册，比较便利，不容易写错
-	ug.POST("/signup", h.SignUp)
-	ug.POST("/login", h.Login)
-	ug.POST("/edit", h.Edit)
-	ug.GET("/profile", h.Profile)
+	ug.GET("/profile", u.Profile)
+	ug.POST("/signup", u.SignUp)
+	//ug.POST("/login", u.Login)
+	ug.POST("/login", u.LoginJWT)
+	ug.POST("/edit", u.Edit)
+
 }
 
-func (h *UserHandler) SignUp(ctx *gin.Context) {
+func (u *UserHandler) SignUp(ctx *gin.Context) {
 	type SignUpReq struct {
 		Email           string `json:"email"`
 		Password        string `json:"password"`
@@ -56,7 +59,7 @@ func (h *UserHandler) SignUp(ctx *gin.Context) {
 		return
 	}
 
-	isEmail, err := h.emailExp.MatchString(req.Email)
+	isEmail, err := u.emailExp.MatchString(req.Email)
 	if err != nil {
 		ctx.String(http.StatusOK, "系统错误")
 		return
@@ -70,7 +73,7 @@ func (h *UserHandler) SignUp(ctx *gin.Context) {
 		return
 	}
 
-	isPassword, err := h.passwordExp.MatchString(req.Password)
+	isPassword, err := u.passwordExp.MatchString(req.Password)
 	if err != nil {
 		//记录日志
 		ctx.String(http.StatusOK, "系统错误")
@@ -81,7 +84,7 @@ func (h *UserHandler) SignUp(ctx *gin.Context) {
 		return
 	}
 	//调用一下 svc 的方法
-	err = h.svc.SignUp(ctx, domain.User{
+	err = u.svc.SignUp(ctx, domain.User{
 		Email:    req.Email,
 		Password: req.Password,
 	})
@@ -98,41 +101,7 @@ func (h *UserHandler) SignUp(ctx *gin.Context) {
 	//这边属于数据库操作
 }
 
-//func (h *UserHandler) LoginJWT(ctx *gin.Context) {
-//	type Req struct {
-//		Email    string `json:"email"`
-//		Password string `json:"password"`
-//	}
-//	var req Req
-//	if err := ctx.Bind(&req); err != nil {
-//		return
-//	}
-//	u, err := h.svc.Login(ctx, req.Email, req.Password)
-//	switch err {
-//	case nil:
-//		uc := UserClaims{
-//			Uid:       u.Id,
-//			UserAgent: ctx.GetHeader("User-Agent"),
-//			RegisteredClaims: jwt.RegisteredClaims{
-//				// 1 分钟过期
-//				ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Minute * 5)),
-//			},
-//		}
-//		token := jwt.NewWithClaims(jwt.SigningMethodHS512, uc)
-//		tokenStr, err := token.SignedString(JWTKey)
-//		if err != nil {
-//			ctx.String(http.StatusOK, "系统错误")
-//		}
-//		ctx.Header("x-jwt-token", tokenStr)
-//		ctx.String(http.StatusOK, "登录成功")
-//	case service.ErrInvalidUserOrPassword:
-//		ctx.String(http.StatusOK, "用户名或者密码不对")
-//	default:
-//		ctx.String(http.StatusOK, "系统错误")
-//	}
-//}
-
-func (h *UserHandler) Login(ctx *gin.Context) {
+func (u *UserHandler) LoginJWT(ctx *gin.Context) {
 	type LoginReq struct {
 		Email    string `json:"email"`
 		Password string `json:"password"`
@@ -143,7 +112,41 @@ func (h *UserHandler) Login(ctx *gin.Context) {
 		return
 	}
 
-	user, err := h.svc.Login(ctx, req.Email, req.Password)
+	user, err := u.svc.Login(ctx, req.Email, req.Password)
+	if errors.Is(err, service.ErrInvalidUserOrPassword) {
+		ctx.String(http.StatusOK, "用户名或密码不正确")
+		return
+	}
+	if err != nil {
+		ctx.String(http.StatusOK, "系统异常")
+		return
+	}
+
+	// 在这里用 JWT 设置登录态，即生成一个 JWT token
+	token := jwt.New(jwt.SigningMethodHS512)
+	tokenStr, err := token.SignedString(JWTKey)
+	if err != nil {
+		ctx.String(http.StatusInternalServerError, "系统错误1")
+		return
+	}
+	ctx.Header("x-jwt-token", tokenStr)
+	fmt.Println(user)
+	ctx.String(http.StatusOK, "登录成功")
+	return
+}
+
+func (u *UserHandler) Login(ctx *gin.Context) {
+	type LoginReq struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+
+	var req LoginReq
+	if err := ctx.Bind(&req); err != nil {
+		return
+	}
+
+	user, err := u.svc.Login(ctx, req.Email, req.Password)
 	if errors.Is(err, service.ErrInvalidUserOrPassword) {
 		ctx.String(http.StatusOK, "用户名或密码不正确")
 		return
@@ -158,12 +161,28 @@ func (h *UserHandler) Login(ctx *gin.Context) {
 	sess := sessions.Default(ctx)
 	// 可以随便设置值，就是要放在 session 里面的值
 	sess.Set("userId", user.Id)
+	sess.Options(sessions.Options{
+		Secure:   true,
+		HttpOnly: true,
+		MaxAge:   60,
+	})
 	sess.Save()
 	ctx.String(http.StatusOK, "登录成功")
 	return
 }
 
-func (h *UserHandler) Edit(ctx *gin.Context) {
+func (u *UserHandler) Logout(ctx *gin.Context) {
+	sess := sessions.Default(ctx)
+	sess.Options(sessions.Options{
+		//Secure: true,
+		//HttpOnly: true,
+		MaxAge: -1,
+	})
+	sess.Save()
+	ctx.String(http.StatusOK, "退出登录成功")
+}
+
+func (u *UserHandler) Edit(ctx *gin.Context) {
 	//type EditReq struct {
 	//	Nickname        string `json:"nickname"`
 	//	Birthday        string `json:"birthday"`
@@ -195,7 +214,7 @@ func (h *UserHandler) Edit(ctx *gin.Context) {
 	//	ctx.String(http.StatusOK, "生日格式不对")
 	//	return
 	//}
-	//err = h.svc.UpdateNonSensitiveInfo(ctx, domain.User{
+	//err = u.svc.UpdateNonSensitiveInfo(ctx, domain.User{
 	//	Id:              uc.Uid,
 	//	Nickname:        req.Nickname,
 	//	Birthday:        birthday,
@@ -209,16 +228,16 @@ func (h *UserHandler) Edit(ctx *gin.Context) {
 
 }
 
-func (h *UserHandler) Profile(ctx *gin.Context) {
+func (u *UserHandler) Profile(ctx *gin.Context) {
 
-	//ctx.String(http.StatusOK, "这是你的 profile")
+	ctx.String(http.StatusOK, "这是你的 profile")
 
 	//uc, ok := ctx.MustGet("user").(UserClaims)
 	//if !ok {
 	//	ctx.AbortWithStatus(http.StatusUnauthorized)
 	//	return
 	//}
-	//u, err := h.svc.FindById(ctx, uc.Uid)
+	//u, err := u.svc.FindById(ctx, uc.Uid)
 	//if err != nil {
 	//	ctx.String(http.StatusOK, "系统异常")
 	//	return
