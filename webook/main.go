@@ -75,10 +75,10 @@ func initWebServer() *gin.Engine {
 	//myStore := &sqlx_store.Store{}
 
 	server.Use(sessions.Sessions("mysession", store))
-	server.Use(middleware.NewLoginMiddlewareBuilder().
-		IgnorePaths("/users/signup").IgnorePaths("/users/login").Build())
-	//server.Use(middleware.NewLoginJWTMiddlewareBuilder().
+	//server.Use(middleware.NewLoginMiddlewareBuilder().
 	//	IgnorePaths("/users/signup").IgnorePaths("/users/login").Build())
+	server.Use(middleware.NewLoginJWTMiddlewareBuilder().
+		IgnorePaths("/users/signup").IgnorePaths("/users/login").Build())
 	return server
 }
 

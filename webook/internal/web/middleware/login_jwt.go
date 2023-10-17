@@ -4,8 +4,10 @@ import (
 	"gitee.com/geektime-geekbang_admin/geektime-basic-go/webook/internal/web"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	"log"
 	"net/http"
 	"strings"
+	"time"
 )
 
 // LoginJWTMiddlewareBuilder jWT 登录校验
@@ -56,12 +58,29 @@ func (l *LoginJWTMiddlewareBuilder) Build() gin.HandlerFunc {
 			//ctx.AbortWithStatus(http.StatusInternalServerError)
 			return
 		}
+		//正常不需要验证 token 的过期时间，因为 Valid 会验证
+		//claims.ExpiresAt.Time.Before(time.Now()){
+		////	过期了
+		//}
 		//	err 为 nil ，token 不为 nil
 		if token == nil || !token.Valid || claims.Uid == 0 {
 			//	没有登录
 			ctx.AbortWithStatus(http.StatusUnauthorized)
 			return
 		}
+
+		now := time.Now()
+		// 每十秒刷新一次
+		if claims.ExpiresAt.Sub(now) < time.Second*50 {
+			claims.ExpiresAt = jwt.NewNumericDate(time.Now().Add(time.Minute))
+			tokenStr, err := token.SignedString(web.JWTKey)
+			if err != nil {
+				//记录日志
+				log.Println("jwt 续约失败", err)
+			}
+			ctx.Header("x-jwt-token", tokenStr)
+		}
+
 		ctx.Set("claims", claims)
 		//ctx.Set("userId", claims)
 	}

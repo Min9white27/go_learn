@@ -39,11 +39,11 @@ func NewUserHandler(svc *service.UserService) *UserHandler {
 func (u *UserHandler) RegisterRoutes(server *gin.Engine) {
 	ug := server.Group("/users")
 	//用分组路由来简化注册，比较便利，不容易写错
-	ug.GET("/profile", u.Profile)
-	//ug.GET("/profile", u.ProfileJWT)
+	//ug.GET("/profile", u.Profile)
+	ug.GET("/profile", u.ProfileJWT)
 	ug.POST("/signup", u.SignUp)
-	ug.POST("/login", u.Login)
-	//ug.POST("/login", u.LoginJWT)
+	//ug.POST("/login", u.Login)
+	ug.POST("/login", u.LoginJWT)
 	ug.POST("/edit", u.Edit)
 
 }
@@ -127,6 +127,9 @@ func (u *UserHandler) LoginJWT(ctx *gin.Context) {
 	// 在这里用 JWT 设置登录态，即生成一个 JWT token
 
 	claims := UserClaims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Minute)),
+		},
 		Uid: user.Id,
 	}
 
@@ -250,7 +253,22 @@ func (u *UserHandler) Edit(ctx *gin.Context) {
 }
 
 func (u *UserHandler) ProfileJWT(ctx *gin.Context) {
-
+	//ctx.String(http.StatusOK, "这是你的 profile")
+	c, _ := ctx.Get("claims")
+	// 可以断定，必然有 claims
+	//if !ok {
+	//	// 在这里设置个监控，用来判定有没有拿到 claims
+	//	ctx.String(http.StatusOK, "系统错误")
+	//	return
+	//}
+	// 通过类型断言，用 ok 来判断是不是
+	claims, ok := c.(*UserClaims)
+	if !ok {
+		// 在这里设置个监控，用来判定有没有拿到 claims
+		ctx.String(http.StatusOK, "系统错误")
+		return
+	}
+	println(claims.Uid)
 }
 
 func (u *UserHandler) Profile(ctx *gin.Context) {
