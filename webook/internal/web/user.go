@@ -10,6 +10,7 @@ import (
 	jwt "github.com/golang-jwt/jwt/v5"
 	"github.com/pkg/errors"
 	"net/http"
+	"time"
 )
 
 var JWTKey = []byte("k6CswdUm77WKcbM68UQUuxVsHSpTCwgK")
@@ -39,9 +40,10 @@ func (u *UserHandler) RegisterRoutes(server *gin.Engine) {
 	ug := server.Group("/users")
 	//用分组路由来简化注册，比较便利，不容易写错
 	ug.GET("/profile", u.Profile)
+	//ug.GET("/profile", u.ProfileJWT)
 	ug.POST("/signup", u.SignUp)
-	//ug.POST("/login", u.Login)
-	ug.POST("/login", u.LoginJWT)
+	ug.POST("/login", u.Login)
+	//ug.POST("/login", u.LoginJWT)
 	ug.POST("/edit", u.Edit)
 
 }
@@ -123,10 +125,15 @@ func (u *UserHandler) LoginJWT(ctx *gin.Context) {
 	}
 
 	// 在这里用 JWT 设置登录态，即生成一个 JWT token
-	token := jwt.New(jwt.SigningMethodHS512)
+
+	claims := UserClaims{
+		Uid: user.Id,
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS512, claims)
 	tokenStr, err := token.SignedString(JWTKey)
 	if err != nil {
-		ctx.String(http.StatusInternalServerError, "系统错误1")
+		ctx.String(http.StatusInternalServerError, "系统错误")
 		return
 	}
 	ctx.Header("x-jwt-token", tokenStr)
@@ -183,54 +190,97 @@ func (u *UserHandler) Logout(ctx *gin.Context) {
 }
 
 func (u *UserHandler) Edit(ctx *gin.Context) {
-	//type EditReq struct {
-	//	Nickname        string `json:"nickname"`
-	//	Birthday        string `json:"birthday"`
-	//	PersonalProfile string `json:"personalProfile"`
-	//}
-	//
-	//var req EditReq
-	//if err := ctx.Bind(&req); err != nil {
-	//	return
-	//}
-	//if req.Nickname == "" {
-	//	ctx.String(http.StatusOK, "昵称不能为空")
-	//	return
-	//}
-	//if len(req.PersonalProfile) > 1024 {
-	//	ctx.String(http.StatusOK, "个人简介不能过长")
-	//	return
-	//}
+	type EditReq struct {
+		Nickname        string `json:"nickname"`
+		Birthday        string `json:"birthday"`
+		PersonalProfile string `json:"personalProfile"`
+	}
+
+	var req EditReq
+	if err := ctx.Bind(&req); err != nil {
+		return
+	}
+
+	sess := sessions.Default(ctx)
+	uid, ok := sess.Get("userId").(int64)
+	if !ok {
+		ctx.String(http.StatusOK, "系统错误")
+		return
+	}
+
+	if uid == 0 {
+		//	没有登录
+		ctx.String(http.StatusInternalServerError, "系统错误")
+		return
+	}
+
+	if req.Nickname == "" {
+		ctx.String(http.StatusOK, "昵称不能为空")
+		return
+	}
+	if len(req.PersonalProfile) > 1024 {
+		ctx.String(http.StatusOK, "个人简介不能过长")
+		return
+	}
 	//
 	//uc, ok := ctx.MustGet("user").(UserClaims)
 	//if !ok {
 	//	ctx.AbortWithStatus(http.StatusUnauthorized)
 	//	return
 	//}
-	//// DateOnly 可以将生日的格式转化成 “2006-01-02 ”，并返回
-	//birthday, err := time.Parse(time.DateOnly, req.Birthday)
-	//if err != nil {
-	//	// 这里其实没有直接校验生日的具体格式，而是检查生日能够转化过来，就说明没有问题
-	//	ctx.String(http.StatusOK, "生日格式不对")
-	//	return
-	//}
-	//err = u.svc.UpdateNonSensitiveInfo(ctx, domain.User{
-	//	Id:              uc.Uid,
-	//	Nickname:        req.Nickname,
-	//	Birthday:        birthday,
-	//	PersonalProfile: req.PersonalProfile,
-	//})
-	//if err != nil {
-	//	ctx.String(http.StatusOK, "系统异常")
-	//	return
-	//}
-	//ctx.String(http.StatusOK, "更新成功")
+	// DateOnly 可以将生日的格式转化成 “2006-01-02 ”，并返回
+	birthday, err := time.Parse(time.DateOnly, req.Birthday)
+	if err != nil {
+		// 这里其实没有直接校验生日的具体格式，而是检查生日能够转化过来，就说明没有问题
+		ctx.String(http.StatusOK, "生日格式不对")
+		return
+	}
+	err = u.svc.UpdateNonSensitiveInfo(ctx, domain.User{
+		Id:              uid,
+		Nickname:        req.Nickname,
+		Birthday:        birthday,
+		PersonalProfile: req.PersonalProfile,
+	})
+	if err != nil {
+		ctx.String(http.StatusOK, "系统异常")
+		return
+	}
+	ctx.String(http.StatusOK, "更新成功")
+
+}
+
+func (u *UserHandler) ProfileJWT(ctx *gin.Context) {
 
 }
 
 func (u *UserHandler) Profile(ctx *gin.Context) {
 
-	ctx.String(http.StatusOK, "这是你的 profile")
+	//ctx.String(http.StatusOK, "这是你的 profile")
+
+	type ProfileReq struct {
+		Nickname        string `json:"nickname"`
+		Birthday        string `json:"birthday"`
+		PersonalProfile string `json:"personalProfile"`
+	}
+
+	var req ProfileReq
+	if err := ctx.Bind(&req); err != nil {
+		return
+	}
+
+	sess := sessions.Default(ctx)
+	uid := sess.Get("userId")
+
+	if uid == nil {
+		//	没有登录
+		ctx.String(http.StatusInternalServerError, "系统错误")
+		return
+	}
+	//} else {
+	//	sess.Set("userId", uid)
+	//}
+
+	uc, err := u.svc.FindById(ctx, uid)
 
 	//uc, ok := ctx.MustGet("user").(UserClaims)
 	//if !ok {
@@ -238,27 +288,27 @@ func (u *UserHandler) Profile(ctx *gin.Context) {
 	//	return
 	//}
 	//u, err := u.svc.FindById(ctx, uc.Uid)
-	//if err != nil {
-	//	ctx.String(http.StatusOK, "系统异常")
-	//	return
-	//}
+	if err != nil {
+		ctx.String(http.StatusOK, "系统异常")
+		return
+	}
 	//type ProfileReq struct {
 	//	Email           string `json:"email"`
 	//	Nickname        string `json:"nickname"`
 	//	Birthday        string `json:"birthday"`
 	//	PersonalProfile string `json:"personalProfile"`
 	//}
-	//ctx.JSON(http.StatusOK, ProfileReq{
-	//	Email:           u.Email,
-	//	Nickname:        u.Nickname,
-	//	Birthday:        u.Birthday.Format(time.DateOnly),
-	//	PersonalProfile: u.PersonalProfile,
-	//})
+	ctx.JSON(http.StatusOK, ProfileReq{
+		Nickname:        uc.Nickname,
+		Birthday:        uc.Birthday.Format(time.DateOnly),
+		PersonalProfile: uc.PersonalProfile,
+	})
 
 }
 
 type UserClaims struct {
 	jwt.RegisteredClaims
-	Uid       int64
-	UserAgent string
+	// 声明要放进去 token 里面的数据
+	Uid int64
+	//UserAgent string
 }

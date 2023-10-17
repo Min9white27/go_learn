@@ -42,7 +42,7 @@ func (r *UserRepository) FindByEmail(ctx context.Context, email string) (domain.
 	}, nil
 }
 
-func (r *UserRepository) FindById(ctx context.Context, uid int64) (domain.User, error) {
+func (r *UserRepository) FindById(ctx context.Context, uid interface{}) (domain.User, error) {
 	//先从 cache 缓存里面找
 	//再从 dao 里面找
 	//找到了回写 cache 缓存

@@ -44,7 +44,10 @@ func (l *LoginJWTMiddlewareBuilder) Build() gin.HandlerFunc {
 			return
 		}
 		tokenStr := segs[1]
-		token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+		claims := &web.UserClaims{}
+		// ParseWithClaims 会修改 claims 的数据，所以上面需要传指针
+		// ParseWithClaims 里面，一定要传入指针
+		token, err := jwt.ParseWithClaims(tokenStr, claims, func(token *jwt.Token) (interface{}, error) {
 			return web.JWTKey, nil
 		})
 		if err != nil {
@@ -54,12 +57,13 @@ func (l *LoginJWTMiddlewareBuilder) Build() gin.HandlerFunc {
 			return
 		}
 		//	err 为 nil ，token 不为 nil
-		if token == nil || !token.Valid {
+		if token == nil || !token.Valid || claims.Uid == 0 {
 			//	没有登录
 			ctx.AbortWithStatus(http.StatusUnauthorized)
 			return
 		}
-
+		ctx.Set("claims", claims)
+		//ctx.Set("userId", claims)
 	}
 
 }

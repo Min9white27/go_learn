@@ -46,7 +46,7 @@ func (dao *UserDAO) FindByEmail(ctx context.Context, email string) (User, error)
 	return u, err
 }
 
-func (dao *UserDAO) FindById(ctx context.Context, uid int64) (User, error) {
+func (dao *UserDAO) FindById(ctx context.Context, uid interface{}) (User, error) {
 	var u User
 	err := dao.db.WithContext(ctx).Where("id = ?", uid).First(&u).Error
 	return u, err
@@ -74,10 +74,12 @@ type User struct {
 	Password string
 
 	// 	往这里面加
-	Nickname string `gorm:"type=varchar(128)"`
+	//`gorm:"type=varchar(128)"`
+	Nickname string
 	Birthday int64
 	// 指定是 varchar 这个类型的，并且长度是 1024
-	PersonalProfile string `gorm:"type=varchar(4096)"`
+	//`gorm:"type=varchar(4096)"`
+	PersonalProfile string
 
 	//创建时间，毫秒数
 	Ctime int64
