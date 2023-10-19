@@ -6,10 +6,12 @@ import (
 	"gitee.com/geektime-geekbang_admin/geektime-basic-go/webook/internal/service"
 	"gitee.com/geektime-geekbang_admin/geektime-basic-go/webook/internal/web"
 	"gitee.com/geektime-geekbang_admin/geektime-basic-go/webook/internal/web/middleware"
+	"gitee.com/geektime-geekbang_admin/geektime-basic-go/webook/pkg/ginx/middlewares/ratelimit"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/sessions"
-	"github.com/gin-contrib/sessions/redis"
+	"github.com/gin-contrib/sessions/memstore"
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"strings"
@@ -38,6 +40,11 @@ func initWebServer() *gin.Engine {
 	//	println("这是第二个 middleware")
 	//})
 
+	redisClient := redis.NewClient(&redis.Options{
+		Addr: "localhost:6379",
+	})
+	server.Use(ratelimit.NewBuilder(redisClient, time.Second, 100).Build())
+
 	server.Use(cors.New(cors.Config{
 		// AllowOrigins 用这种的话就需要加入所有需要的地址，也可以用 AllowOriginFunc ，这样写可以不用刻意写全部地址
 		//AllowOrigins: []string{"http://localhost:3000"},
@@ -59,18 +66,18 @@ func initWebServer() *gin.Engine {
 	}))
 
 	//store := cookie.NewStore([]byte("secret"))
-	//store := memstore.NewStore([]byte("^dg#Wx%vaw8D$OBIRT4AXolVhiM103fN"),
-	//	[]byte("!YwTy&F^mBG@4gZ1WDEna9je#chOslQz"))
+	store := memstore.NewStore([]byte("^dg#Wx%vaw8D$OBIRT4AXolVhiM103fN"),
+		[]byte("!YwTy&F^mBG@4gZ1WDEna9je#chOslQz"))
 
 	//第一个参数是最大空闲连接数量
 	//第二个就是 tcp ，不太可能用udp
 	//第三、四个就是连接信息和密码
 	//第五、六个就是两个key:Authentication 是指身份认证，Encryption 是指数据加密
-	store, err := redis.NewStore(16, "tcp", "localhost:6379", "",
-		[]byte("^dg#Wx%vaw8D$OBIRT4AXolVhiM103fN"), []byte("!YwTy&F^mBG@4gZ1WDEna9je#chOslQz"))
-	if err != nil {
-		panic(err)
-	}
+	//store, err := redis.NewStore(16, "tcp", "localhost:6379", "",
+	//	[]byte("^dg#Wx%vaw8D$OBIRT4AXolVhiM103fN"), []byte("!YwTy&F^mBG@4gZ1WDEna9je#chOslQz"))
+	//if err != nil {
+	//	panic(err)
+	//}
 
 	//myStore := &sqlx_store.Store{}
 
