@@ -14,18 +14,23 @@ import (
 	"github.com/redis/go-redis/v9"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"net/http"
 	"strings"
 	"time"
 )
 
 func main() {
 
-	db := initDB()
-	server := initWebServer()
+	//db := initDB()
+	//server := initWebServer()
 
-	u := initUser(db)
-	u.RegisterRoutes(server)
+	//u := initUser(db)
+	//u.RegisterRoutes(server)
 	//分散式注册路由写法，优点是比较有条理，缺点是找路由时不太好找
+	server := gin.Default()
+	server.GET("/hello", func(ctx *gin.Context) {
+		ctx.String(http.StatusOK, "你好，阿橙")
+	})
 	server.Run(":8080")
 }
 
