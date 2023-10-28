@@ -17,7 +17,7 @@ spec:
     #    POD 的具体信息
     spec:
       containers:
-        - name: webook
+        - name: webook-live
           image: flycash/webook-live:v0.0.1
           ports:
             - containerPort: 8080
