@@ -1,6 +1,7 @@
 package main
 
 import (
+	"gitee.com/geektime-geekbang_admin/geektime-basic-go/webook/config"
 	"gitee.com/geektime-geekbang_admin/geektime-basic-go/webook/internal/repository"
 	"gitee.com/geektime-geekbang_admin/geektime-basic-go/webook/internal/repository/dao"
 	"gitee.com/geektime-geekbang_admin/geektime-basic-go/webook/internal/service"
@@ -21,13 +22,13 @@ import (
 
 func main() {
 
-	//db := initDB()
-	//server := initWebServer()
+	db := initDB()
+	server := initWebServer()
 
-	//u := initUser(db)
-	//u.RegisterRoutes(server)
+	u := initUser(db)
+	u.RegisterRoutes(server)
 	//分散式注册路由写法，优点是比较有条理，缺点是找路由时不太好找
-	server := gin.Default()
+	//server := gin.Default()
 	server.GET("/hello", func(ctx *gin.Context) {
 		ctx.String(http.StatusOK, "你好，阿橙")
 	})
@@ -46,7 +47,7 @@ func initWebServer() *gin.Engine {
 	//})
 
 	redisClient := redis.NewClient(&redis.Options{
-		Addr: "localhost:6379",
+		Addr: config.Config.Redis.Addr,
 	})
 	server.Use(ratelimit.NewBuilder(redisClient, time.Second, 100).Build())
 
@@ -103,7 +104,7 @@ func initUser(db *gorm.DB) *web.UserHandler {
 }
 
 func initDB() *gorm.DB {
-	db, err := gorm.Open(mysql.Open("root:root@tcp(localhost:13316)/webook"))
+	db, err := gorm.Open(mysql.Open(config.Config.DB.DSN))
 	if err != nil {
 		// 我只会在初始化过程中 panic
 		// panic 相当于整个 goroutine 结束
