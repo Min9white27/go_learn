@@ -32,7 +32,7 @@ func main() {
 	server.GET("/hello", func(ctx *gin.Context) {
 		ctx.String(http.StatusOK, "你好，阿橙")
 	})
-	server.Run(":8080")
+	server.Run(":8081")
 }
 
 func initWebServer() *gin.Engine {

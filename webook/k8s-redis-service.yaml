@@ -8,7 +8,7 @@ spec:
   ports:
     - protocol: TCP
 #      service 本身的
-      port: 11479
+      port: 6380
 #      Redis 默认端口
 #      Pod 上暴露的端口
       targetPort: 6379
