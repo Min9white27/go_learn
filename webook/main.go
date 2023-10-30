@@ -7,12 +7,8 @@ import (
 	"gitee.com/geektime-geekbang_admin/geektime-basic-go/webook/internal/service"
 	"gitee.com/geektime-geekbang_admin/geektime-basic-go/webook/internal/web"
 	"gitee.com/geektime-geekbang_admin/geektime-basic-go/webook/internal/web/middleware"
-	"gitee.com/geektime-geekbang_admin/geektime-basic-go/webook/pkg/ginx/middlewares/ratelimit"
 	"github.com/gin-contrib/cors"
-	"github.com/gin-contrib/sessions"
-	"github.com/gin-contrib/sessions/memstore"
 	"github.com/gin-gonic/gin"
-	"github.com/redis/go-redis/v9"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"net/http"
@@ -32,7 +28,9 @@ func main() {
 	server.GET("/hello", func(ctx *gin.Context) {
 		ctx.String(http.StatusOK, "你好，阿橙")
 	})
-	server.Run(":8081")
+	//server.Run(":8081")
+	server.Run(":8080")
+
 }
 
 func initWebServer() *gin.Engine {
@@ -46,10 +44,10 @@ func initWebServer() *gin.Engine {
 	//	println("这是第二个 middleware")
 	//})
 
-	redisClient := redis.NewClient(&redis.Options{
-		Addr: config.Config.Redis.Addr,
-	})
-	server.Use(ratelimit.NewBuilder(redisClient, time.Second, 100).Build())
+	//redisClient := redis.NewClient(&redis.Options{
+	//	Addr: config.Config.Redis.Addr,
+	//})
+	//server.Use(ratelimit.NewBuilder(redisClient, time.Second, 100).Build())
 
 	server.Use(cors.New(cors.Config{
 		// AllowOrigins 用这种的话就需要加入所有需要的地址，也可以用 AllowOriginFunc ，这样写可以不用刻意写全部地址
@@ -72,8 +70,8 @@ func initWebServer() *gin.Engine {
 	}))
 
 	//store := cookie.NewStore([]byte("secret"))
-	store := memstore.NewStore([]byte("^dg#Wx%vaw8D$OBIRT4AXolVhiM103fN"),
-		[]byte("!YwTy&F^mBG@4gZ1WDEna9je#chOslQz"))
+	//store := memstore.NewStore([]byte("^dg#Wx%vaw8D$OBIRT4AXolVhiM103fN"),
+	//[]byte("!YwTy&F^mBG@4gZ1WDEna9je#chOslQz"))
 
 	//第一个参数是最大空闲连接数量
 	//第二个就是 tcp ，不太可能用udp
@@ -87,7 +85,7 @@ func initWebServer() *gin.Engine {
 
 	//myStore := &sqlx_store.Store{}
 
-	server.Use(sessions.Sessions("mysession", store))
+	//server.Use(sessions.Sessions("mysession", store))
 	//server.Use(middleware.NewLoginMiddlewareBuilder().
 	//	IgnorePaths("/users/signup").IgnorePaths("/users/login").Build())
 	server.Use(middleware.NewLoginJWTMiddlewareBuilder().
