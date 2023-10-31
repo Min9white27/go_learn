@@ -3,12 +3,14 @@ package main
 import (
 	"gitee.com/geektime-geekbang_admin/geektime-basic-go/webook/config"
 	"gitee.com/geektime-geekbang_admin/geektime-basic-go/webook/internal/repository"
+	"gitee.com/geektime-geekbang_admin/geektime-basic-go/webook/internal/repository/cache"
 	"gitee.com/geektime-geekbang_admin/geektime-basic-go/webook/internal/repository/dao"
 	"gitee.com/geektime-geekbang_admin/geektime-basic-go/webook/internal/service"
 	"gitee.com/geektime-geekbang_admin/geektime-basic-go/webook/internal/web"
 	"gitee.com/geektime-geekbang_admin/geektime-basic-go/webook/internal/web/middleware"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"net/http"
@@ -21,7 +23,8 @@ func main() {
 	db := initDB()
 	server := initWebServer()
 
-	u := initUser(db)
+	rdb := initRedis()
+	u := initUser(db, rdb)
 	u.RegisterRoutes(server)
 	//分散式注册路由写法，优点是比较有条理，缺点是找路由时不太好找
 	//server := gin.Default()
@@ -93,9 +96,17 @@ func initWebServer() *gin.Engine {
 	return server
 }
 
-func initUser(db *gorm.DB) *web.UserHandler {
+func initRedis() redis.Cmdable {
+	redisClient := redis.NewClient(&redis.Options{
+		Addr: config.Config.Redis.Addr,
+	})
+	return redisClient
+}
+
+func initUser(db *gorm.DB, rdb redis.Cmdable) *web.UserHandler {
 	ud := dao.NewUserDAO(db)
-	repo := repository.NewUserRepository(ud)
+	uc := cache.NewUserCache(rdb)
+	repo := repository.NewUserRepository(ud, uc)
 	svc := service.NewUserService(repo)
 	u := web.NewUserHandler(svc)
 	return u
