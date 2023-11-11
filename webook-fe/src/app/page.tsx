@@ -3,7 +3,7 @@
 import React from 'react';
 import SignupForm from '../pages/users/signup';
 import LoginForm from '../pages/users/login';
-import { BrowserRouter, Route, Routes } from "react-router-dom"
+import {BrowserRouter, Route, Routes} from "react-router-dom"
 import {Row} from "antd";
 
 // @ts-ignore

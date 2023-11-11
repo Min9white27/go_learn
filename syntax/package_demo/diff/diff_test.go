@@ -1,6 +1,6 @@
 package diff_test
 
-import "gitee.com/geektime-geekbang_admin/geektime-basic-go/syntax/package_demo/diff"
+import "gitee.com/geekbang/basic-go/syntax/package_demo/diff"
 
 func UseHello() {
 	//要调用Hello()，它会认为它在两个不同的包里面，所以需要在前面加包的前缀

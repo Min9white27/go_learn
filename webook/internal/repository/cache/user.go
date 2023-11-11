@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"gitee.com/geektime-geekbang_admin/geektime-basic-go/webook/internal/domain"
+	"gitee.com/geekbang/basic-go/webook/internal/domain"
 	"github.com/redis/go-redis/v9"
 	"time"
 )
@@ -19,9 +19,10 @@ type UserCache struct {
 	expiration time.Duration
 }
 
-// A 用到了 B，B 一定是借口
-// A 用到了 B，B 一定是 A 的字段
-// A 用到了 B，A 绝对不初始化 B，而是外面注入
+// A 用到了 B，B 一定是接口 => 保证面向接口
+// A 用到了 B，B 一定是 A 的字段 => 规避包变量、包方法，这两种都缺乏扩展性
+// A 用到了 B，A 绝对不初始化 B，而是外面注入 => 保持依赖注入（DI, Dependency Injection）和依赖反转（IOC）
+// expiration 1s, 1m
 
 func NewUserCache(client redis.Cmdable) *UserCache {
 	return &UserCache{

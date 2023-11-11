@@ -1,13 +1,13 @@
 package main
 
 import (
-	"gitee.com/geektime-geekbang_admin/geektime-basic-go/webook/config"
-	"gitee.com/geektime-geekbang_admin/geektime-basic-go/webook/internal/repository"
-	"gitee.com/geektime-geekbang_admin/geektime-basic-go/webook/internal/repository/cache"
-	"gitee.com/geektime-geekbang_admin/geektime-basic-go/webook/internal/repository/dao"
-	"gitee.com/geektime-geekbang_admin/geektime-basic-go/webook/internal/service"
-	"gitee.com/geektime-geekbang_admin/geektime-basic-go/webook/internal/web"
-	"gitee.com/geektime-geekbang_admin/geektime-basic-go/webook/internal/web/middleware"
+	"gitee.com/geekbang/basic-go/webook/config"
+	"gitee.com/geekbang/basic-go/webook/internal/repository"
+	"gitee.com/geekbang/basic-go/webook/internal/repository/cache"
+	"gitee.com/geekbang/basic-go/webook/internal/repository/dao"
+	"gitee.com/geekbang/basic-go/webook/internal/service"
+	"gitee.com/geekbang/basic-go/webook/internal/web"
+	"gitee.com/geekbang/basic-go/webook/internal/web/middleware"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"

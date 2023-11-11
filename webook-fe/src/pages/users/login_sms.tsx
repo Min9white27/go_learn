@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button, Form, Input } from 'antd';
+import {Button, Form, Input} from 'antd';
 import axios from "@/axios/axios";
 import router from "next/router";
 

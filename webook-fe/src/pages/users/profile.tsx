@@ -1,6 +1,6 @@
-import { ProDescriptions } from '@ant-design/pro-components';
-import React, { useState, useEffect } from 'react';
-import { Button } from 'antd';
+import {ProDescriptions} from '@ant-design/pro-components';
+import React, {useEffect, useState} from 'react';
+import {Button} from 'antd';
 import axios from "@/axios/axios";
 
 function Page() {
