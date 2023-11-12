@@ -16,6 +16,13 @@ type CodeService struct {
 	//tplId string
 }
 
+func NewCodeService(repo *repository.CodeRepository, smsSvc sms.Service) *CodeService {
+	return &CodeService{
+		repo:   repo,
+		smsSvc: smsSvc,
+	}
+}
+
 func (svc *CodeService) Send(ctx context.Context,
 	// biz 用于区别业务场景
 	biz string, phone string) error {
