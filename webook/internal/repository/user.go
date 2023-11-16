@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"database/sql"
 	"gitee.com/geekbang/basic-go/webook/internal/domain"
 	"gitee.com/geekbang/basic-go/webook/internal/repository/cache"
 	"gitee.com/geekbang/basic-go/webook/internal/repository/dao"
@@ -9,8 +10,8 @@ import (
 )
 
 var (
-	ErrUserDuplicateEmail = dao.ErrUserDuplicateEmail
-	ErrUserNotFound       = dao.ErrUserNotFound
+	ErrUserDuplicate = dao.ErrUserDuplicate
+	ErrUserNotFound  = dao.ErrUserNotFound
 )
 
 type UserRepository struct {
@@ -26,10 +27,7 @@ func NewUserRepository(dao *dao.UserDAO, c *cache.UserCache) *UserRepository {
 }
 
 func (r *UserRepository) Create(ctx context.Context, u domain.User) error {
-	return r.dao.Insert(ctx, dao.User{
-		Email:    u.Email,
-		Password: u.Password,
-	})
+	return r.dao.Insert(ctx, r.DomainToEntity(u))
 }
 
 func (r *UserRepository) FindByEmail(ctx context.Context, email string) (domain.User, error) {
@@ -38,11 +36,16 @@ func (r *UserRepository) FindByEmail(ctx context.Context, email string) (domain.
 	if err != nil {
 		return domain.User{}, err
 	}
-	return domain.User{
-		Id:       u.Id,
-		Email:    u.Email,
-		Password: u.Password,
-	}, nil
+	return r.EntityToDomain(u), nil
+}
+
+func (r *UserRepository) FindByPhone(ctx context.Context, phone string) (domain.User, error) {
+	// SELECT * FROM `users` WHERE `email`=?
+	u, err := r.dao.FindByPhone(ctx, phone)
+	if err != nil {
+		return domain.User{}, err
+	}
+	return r.EntityToDomain(u), nil
 }
 
 func (r *UserRepository) FindByIdV1(ctx context.Context, uid interface{}) (domain.User, error) {
@@ -53,7 +56,7 @@ func (r *UserRepository) FindByIdV1(ctx context.Context, uid interface{}) (domai
 	if err != nil {
 		return domain.User{}, err
 	}
-	return r.toDomain(u), nil
+	return r.EntityToDomain(u), nil
 }
 
 func (r *UserRepository) FindById(ctx context.Context, id int64) (domain.User, error) {
@@ -72,11 +75,7 @@ func (r *UserRepository) FindById(ctx context.Context, id int64) (domain.User, e
 		return domain.User{}, err
 	}
 
-	u = domain.User{
-		Id:       ue.Id,
-		Email:    ue.Email,
-		Password: ue.Password,
-	}
+	u = r.EntityToDomain(ue)
 
 	// 使用 Redis 一定会出现数据不一致性，无可避免
 	go func() {
@@ -103,27 +102,38 @@ func (r *UserRepository) FindById(ctx context.Context, id int64) (domain.User, e
 }
 
 func (r *UserRepository) UpdateNonZeroFields(ctx context.Context, user domain.User) error {
-	return r.dao.UpdateByUid(ctx, r.toEntity(user))
+	return r.dao.UpdateByUid(ctx, r.DomainToEntity(user))
 }
 
-func (r *UserRepository) toDomain(u dao.User) domain.User {
+func (r *UserRepository) EntityToDomain(u dao.User) domain.User {
 	return domain.User{
 		Id:              u.Id,
-		Email:           u.Email,
+		Email:           u.Email.String,
 		Password:        u.Password,
+		Phone:           u.Phone.String,
 		Nickname:        u.Nickname,
 		Birthday:        time.UnixMilli(u.Birthday),
 		PersonalProfile: u.PersonalProfile,
+		Ctime:           time.UnixMilli(u.Ctime),
 	}
 }
 
-func (r *UserRepository) toEntity(u domain.User) dao.User {
+func (r *UserRepository) DomainToEntity(u domain.User) dao.User {
 	return dao.User{
-		Id:              u.Id,
-		Email:           u.Email,
+		Id: u.Id,
+		Email: sql.NullString{
+			String: u.Email,
+			// 这里判断确实有这个手机号
+			Valid: u.Email != "",
+		},
+		Phone: sql.NullString{
+			String: u.Phone,
+			Valid:  u.Phone != "",
+		},
 		Password:        u.Password,
 		Nickname:        u.Nickname,
 		Birthday:        u.Birthday.UnixMilli(),
 		PersonalProfile: u.PersonalProfile,
+		Ctime:           u.Ctime.UnixMilli(),
 	}
 }

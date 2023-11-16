@@ -8,6 +8,7 @@ type User struct {
 	Id              int64
 	Email           string
 	Password        string
+	Phone           string
 	Nickname        string
 	PersonalProfile string
 	Ctime           time.Time

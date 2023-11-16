@@ -10,6 +10,11 @@ import (
 
 const codeTPlId = "1877556"
 
+var (
+	ErrCodeSendTooMany        = repository.ErrCodeSendTooMany
+	ErrCodeVerifyTooManyTimes = repository.ErrCodeVerifyTooManyTimes
+)
+
 type CodeService struct {
 	repo   *repository.CodeRepository
 	smsSvc sms.Service
@@ -56,7 +61,7 @@ func (svc *CodeService) generateCode() string {
 	num := rand.Intn(1000000)
 	// 不够六位数的，加上前导 0
 	// 比如生成随机数1，就会格式化成 000001
-	return fmt.Sprintf("%6d", num)
+	return fmt.Sprintf("%06d", num)
 }
 
 // VerifyV1 非标准写法，可以不用管验证码通过的问题，过于没过都当成系统异常与否的问题
