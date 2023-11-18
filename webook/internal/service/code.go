@@ -15,20 +15,25 @@ var (
 	ErrCodeVerifyTooManyTimes = repository.ErrCodeVerifyTooManyTimes
 )
 
-type CodeService struct {
-	repo   *repository.CodeRepository
+type CodeService interface {
+	Send(ctx context.Context, biz, phone string) error
+	Verify(ctx context.Context, biz, phone, inputCode string) (bool, error)
+}
+
+type CodeRedisService struct {
+	repo   repository.CodeRepository
 	smsSvc sms.Service
 	//tplId string
 }
 
-func NewCodeService(repo *repository.CodeRepository, smsSvc sms.Service) *CodeService {
-	return &CodeService{
+func NewCodeRedisService(repo repository.CodeRepository, smsSvc sms.Service) CodeService {
+	return &CodeRedisService{
 		repo:   repo,
 		smsSvc: smsSvc,
 	}
 }
 
-func (svc *CodeService) Send(ctx context.Context,
+func (svc *CodeRedisService) Send(ctx context.Context,
 	// biz 用于区别业务场景
 	biz string, phone string) error {
 	//	生成一个验证码
@@ -52,11 +57,11 @@ func (svc *CodeService) Send(ctx context.Context,
 }
 
 // Verify bool 代表验证码通没通过， error 代表系统有没有出错
-func (svc *CodeService) Verify(ctx context.Context, biz string, phone string, inputCode string) (bool, error) {
+func (svc *CodeRedisService) Verify(ctx context.Context, biz string, phone string, inputCode string) (bool, error) {
 	return svc.repo.Verify(ctx, biz, phone, inputCode)
 }
 
-func (svc *CodeService) generateCode() string {
+func (svc *CodeRedisService) generateCode() string {
 	// 六位数，num 在 0， 999999 之间，包括 0 和 999999
 	num := rand.Intn(1000000)
 	// 不够六位数的，加上前导 0
@@ -65,6 +70,6 @@ func (svc *CodeService) generateCode() string {
 }
 
 // VerifyV1 非标准写法，可以不用管验证码通过的问题，过于没过都当成系统异常与否的问题
-//func (svc *CodeService) VerifyV1(ctx context.Context, biz string, phone string, inputCode string) error {
+//func (svc *CodeRedisService) VerifyV1(ctx context.Context, biz string, phone string, inputCode string) error {
 //
 //}

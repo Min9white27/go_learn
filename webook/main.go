@@ -111,10 +111,10 @@ func initUser(db *gorm.DB, rdb redis.Cmdable) *web.UserHandler {
 	uc := cache.NewUserCache(rdb)
 	repo := repository.NewUserRepository(ud, uc)
 	svc := service.NewUserService(repo)
-	codeCache := cache.NewCodeCache(rdb)
-	codeRepo := repository.NewCodeRepository(codeCache)
+	codeCache := cache.NewCodeRedisCache(rdb)
+	codeRepo := repository.NewCodeRedisRepository(codeCache)
 	smsSvc := memory.NewService()
-	codeSvc := service.NewCodeService(codeRepo, smsSvc)
+	codeSvc := service.NewCodeRedisService(codeRepo, smsSvc)
 	u := web.NewUserHandler(svc, codeSvc)
 	return u
 }
