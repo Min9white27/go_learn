@@ -31,7 +31,14 @@ type CodeRedisCache struct {
 	client redis.Cmdable
 }
 
-func NewCodeRedisCache(client redis.Cmdable) CodeCache {
+// NewCodeCacheGoBestPractice Go 的最佳实践是返回具体类型
+func NewCodeCacheGoBestPractice(client redis.Cmdable) *CodeRedisCache {
+	return &CodeRedisCache{
+		client: client,
+	}
+}
+
+func NewCodeCache(client redis.Cmdable) CodeCache {
 	return &CodeRedisCache{
 		client: client,
 	}

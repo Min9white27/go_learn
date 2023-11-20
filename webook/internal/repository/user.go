@@ -14,41 +14,50 @@ var (
 	ErrUserNotFound  = dao.ErrUserNotFound
 )
 
-type UserRepository struct {
-	dao   *dao.UserDAO
-	cache *cache.UserCache
+type UserRepository interface {
+	Create(ctx context.Context, u domain.User) error
+	FindByEmail(ctx context.Context, email string) (domain.User, error)
+	FindByPhone(ctx context.Context, phone string) (domain.User, error)
+	FindByIdV1(ctx context.Context, uid interface{}) (domain.User, error)
+	FindById(ctx context.Context, id int64) (domain.User, error)
+	UpdateNonZeroFields(ctx context.Context, user domain.User) error
 }
 
-func NewUserRepository(dao *dao.UserDAO, c *cache.UserCache) *UserRepository {
-	return &UserRepository{
+type CacheUserRepository struct {
+	dao   dao.UserDAO
+	cache cache.UserCache
+}
+
+func NewUserRepository(dao dao.UserDAO, c cache.UserCache) UserRepository {
+	return &CacheUserRepository{
 		dao:   dao,
 		cache: c,
 	}
 }
 
-func (r *UserRepository) Create(ctx context.Context, u domain.User) error {
-	return r.dao.Insert(ctx, r.DomainToEntity(u))
+func (r *CacheUserRepository) Create(ctx context.Context, u domain.User) error {
+	return r.dao.Insert(ctx, r.domainToEntity(u))
 }
 
-func (r *UserRepository) FindByEmail(ctx context.Context, email string) (domain.User, error) {
+func (r *CacheUserRepository) FindByEmail(ctx context.Context, email string) (domain.User, error) {
 	// SELECT * FROM `users` WHERE `email`=?
 	u, err := r.dao.FindByEmail(ctx, email)
 	if err != nil {
 		return domain.User{}, err
 	}
-	return r.EntityToDomain(u), nil
+	return r.entityToDomain(u), nil
 }
 
-func (r *UserRepository) FindByPhone(ctx context.Context, phone string) (domain.User, error) {
+func (r *CacheUserRepository) FindByPhone(ctx context.Context, phone string) (domain.User, error) {
 	// SELECT * FROM `users` WHERE `email`=?
 	u, err := r.dao.FindByPhone(ctx, phone)
 	if err != nil {
 		return domain.User{}, err
 	}
-	return r.EntityToDomain(u), nil
+	return r.entityToDomain(u), nil
 }
 
-func (r *UserRepository) FindByIdV1(ctx context.Context, uid interface{}) (domain.User, error) {
+func (r *CacheUserRepository) FindByIdV1(ctx context.Context, uid interface{}) (domain.User, error) {
 	//先从 cache 缓存里面找
 	//再从 dao 里面找
 	//找到了回写 cache 缓存
@@ -56,10 +65,10 @@ func (r *UserRepository) FindByIdV1(ctx context.Context, uid interface{}) (domai
 	if err != nil {
 		return domain.User{}, err
 	}
-	return r.EntityToDomain(u), nil
+	return r.entityToDomain(u), nil
 }
 
-func (r *UserRepository) FindById(ctx context.Context, id int64) (domain.User, error) {
+func (r *CacheUserRepository) FindById(ctx context.Context, id int64) (domain.User, error) {
 	u, err := r.cache.Get(ctx, id)
 	if err != nil {
 		//	必然有数据
@@ -75,7 +84,7 @@ func (r *UserRepository) FindById(ctx context.Context, id int64) (domain.User, e
 		return domain.User{}, err
 	}
 
-	u = r.EntityToDomain(ue)
+	u = r.entityToDomain(ue)
 
 	// 使用 Redis 一定会出现数据不一致性，无可避免
 	go func() {
@@ -101,11 +110,11 @@ func (r *UserRepository) FindById(ctx context.Context, id int64) (domain.User, e
 	// 缓存出错了，你也不知道有没有数据
 }
 
-func (r *UserRepository) UpdateNonZeroFields(ctx context.Context, user domain.User) error {
-	return r.dao.UpdateByUid(ctx, r.DomainToEntity(user))
+func (r *CacheUserRepository) UpdateNonZeroFields(ctx context.Context, user domain.User) error {
+	return r.dao.UpdateByUid(ctx, r.domainToEntity(user))
 }
 
-func (r *UserRepository) EntityToDomain(u dao.User) domain.User {
+func (r *CacheUserRepository) entityToDomain(u dao.User) domain.User {
 	return domain.User{
 		Id:              u.Id,
 		Email:           u.Email.String,
@@ -118,7 +127,7 @@ func (r *UserRepository) EntityToDomain(u dao.User) domain.User {
 	}
 }
 
-func (r *UserRepository) DomainToEntity(u domain.User) dao.User {
+func (r *CacheUserRepository) domainToEntity(u domain.User) dao.User {
 	return dao.User{
 		Id: u.Id,
 		Email: sql.NullString{

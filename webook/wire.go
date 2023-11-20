@@ -21,13 +21,13 @@ func InitWebServer() *gin.Engine {
 		// 初始化 DAO
 		dao.NewUserDAO,
 		// 初始化 cache
-		cache.NewUserCache, cache.NewCodeRedisCache,
+		cache.NewUserCache, cache.NewCodeCache,
 
 		// 初始化 repository
-		repository.NewUserRepository, repository.NewCodeRedisRepository,
+		repository.NewUserRepository, repository.NewCodeRepository,
 
 		// 初始化 service
-		service.NewUserService, service.NewCodeRedisService, ioc.InitSMSService,
+		service.NewUserService, service.NewCodeService, ioc.InitSMSService,
 
 		// 初始化 UserHandler
 		web.NewUserHandler,

@@ -20,20 +20,20 @@ type CodeService interface {
 	Verify(ctx context.Context, biz, phone, inputCode string) (bool, error)
 }
 
-type CodeRedisService struct {
+type codeService struct {
 	repo   repository.CodeRepository
 	smsSvc sms.Service
 	//tplId string
 }
 
-func NewCodeRedisService(repo repository.CodeRepository, smsSvc sms.Service) CodeService {
-	return &CodeRedisService{
+func NewCodeService(repo repository.CodeRepository, smsSvc sms.Service) CodeService {
+	return &codeService{
 		repo:   repo,
 		smsSvc: smsSvc,
 	}
 }
 
-func (svc *CodeRedisService) Send(ctx context.Context,
+func (svc *codeService) Send(ctx context.Context,
 	// biz 用于区别业务场景
 	biz string, phone string) error {
 	//	生成一个验证码
@@ -57,11 +57,11 @@ func (svc *CodeRedisService) Send(ctx context.Context,
 }
 
 // Verify bool 代表验证码通没通过， error 代表系统有没有出错
-func (svc *CodeRedisService) Verify(ctx context.Context, biz string, phone string, inputCode string) (bool, error) {
+func (svc *codeService) Verify(ctx context.Context, biz string, phone string, inputCode string) (bool, error) {
 	return svc.repo.Verify(ctx, biz, phone, inputCode)
 }
 
-func (svc *CodeRedisService) generateCode() string {
+func (svc *codeService) generateCode() string {
 	// 六位数，num 在 0， 999999 之间，包括 0 和 999999
 	num := rand.Intn(1000000)
 	// 不够六位数的，加上前导 0
@@ -70,6 +70,6 @@ func (svc *CodeRedisService) generateCode() string {
 }
 
 // VerifyV1 非标准写法，可以不用管验证码通过的问题，过于没过都当成系统异常与否的问题
-//func (svc *CodeRedisService) VerifyV1(ctx context.Context, biz string, phone string, inputCode string) error {
+//func (svc *codeService) VerifyV1(ctx context.Context, biz string, phone string, inputCode string) error {
 //
 //}
