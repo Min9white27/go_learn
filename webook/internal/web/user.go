@@ -15,6 +15,12 @@ import (
 
 const biz = "login"
 
+// 确保 UserHandler 上实现了 handler 接口
+var _ handler = &UserHandler{}
+
+// 这个更优雅
+var _ handler = (*UserHandler)(nil)
+
 var JWTKey = []byte("k6CswdUm77WKcbM68UQUuxVsHSpTCwgK")
 
 // UserHandler 准备在这上面定义跟用户有关的路由
