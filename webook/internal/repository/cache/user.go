@@ -11,7 +11,12 @@ import (
 
 var ErrKeyNotExist = redis.Nil
 
-type UserCache struct {
+type UserCache interface {
+	Get(ctx context.Context, id int64) (domain.User, error)
+	Set(ctx context.Context, u domain.User) error
+}
+
+type RedisUserCache struct {
 	// 可以传单机 Redis
 	// 也可以传 cluster 的 Redis
 	client redis.Cmdable
@@ -24,8 +29,8 @@ type UserCache struct {
 // A 用到了 B，A 绝对不初始化 B，而是外面注入 => 保持依赖注入（DI, Dependency Injection）和依赖反转（IOC）
 // expiration 1s, 1m
 
-func NewUserCache(client redis.Cmdable) *UserCache {
-	return &UserCache{
+func NewUserCache(client redis.Cmdable) UserCache {
+	return &RedisUserCache{
 		client:     client,
 		expiration: time.Minute * 15,
 	}
@@ -33,7 +38,7 @@ func NewUserCache(client redis.Cmdable) *UserCache {
 
 // Get 只要 error 为 nil, 就认为缓存里面有数据
 // 如果没有数据，返回一个特定的 error
-func (cache *UserCache) Get(ctx context.Context, id int64) (domain.User, error) {
+func (cache *RedisUserCache) Get(ctx context.Context, id int64) (domain.User, error) {
 	key := cache.key(id)
 	// 数据不存在，err = redis.Nil
 	val, err := cache.client.Get(ctx, key).Bytes()
@@ -49,7 +54,7 @@ func (cache *UserCache) Get(ctx context.Context, id int64) (domain.User, error) 
 	return u, err
 }
 
-func (cache *UserCache) Set(ctx context.Context, u domain.User) error {
+func (cache *RedisUserCache) Set(ctx context.Context, u domain.User) error {
 	val, err := json.Marshal(u)
 	if err != nil {
 		return err
@@ -58,7 +63,7 @@ func (cache *UserCache) Set(ctx context.Context, u domain.User) error {
 	return cache.client.Set(ctx, key, val, cache.expiration).Err()
 }
 
-func (cache *UserCache) key(id int64) string {
+func (cache *RedisUserCache) key(id int64) string {
 	return fmt.Sprintf("user:info:%d", id)
 }
 

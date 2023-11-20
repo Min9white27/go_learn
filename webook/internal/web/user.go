@@ -25,14 +25,14 @@ var JWTKey = []byte("k6CswdUm77WKcbM68UQUuxVsHSpTCwgK")
 
 // UserHandler 准备在这上面定义跟用户有关的路由
 type UserHandler struct {
-	svc         *service.UserService
+	svc         service.UserService
 	codeSvc     service.CodeService
 	emailExp    *regexp.Regexp
 	passwordExp *regexp.Regexp
 	phoneExp    *regexp.Regexp
 }
 
-func NewUserHandler(svc *service.UserService, codeSvc service.CodeService) *UserHandler {
+func NewUserHandler(svc service.UserService, codeSvc service.CodeService) *UserHandler {
 	const (
 		emailRegexPattern    = "^\\w+([-+.]\\w+)*@\\w+([-.]\\w+)*\\.\\w+([-.]\\w+)*$"
 		passwordRegexPattern = `^(?=.*[A-Za-z])(?=.*\d)(?=.*[$@$!%*#?&])[A-Za-z\d$@$!%*#?&]{8,}$`

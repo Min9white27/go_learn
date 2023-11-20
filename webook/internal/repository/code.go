@@ -15,20 +15,20 @@ type CodeRepository interface {
 	Verify(ctx context.Context, biz, phone, inputCode string) (bool, error)
 }
 
-type CodeRedisRepository struct {
+type CacheCodeRepository struct {
 	cache cache.CodeCache
 }
 
-func NewCodeRedisRepository(c cache.CodeCache) CodeRepository {
-	return &CodeRedisRepository{
+func NewCodeRepository(c cache.CodeCache) CodeRepository {
+	return &CacheCodeRepository{
 		cache: c,
 	}
 }
 
-func (repo *CodeRedisRepository) Store(ctx context.Context, biz, phone, code string) error {
+func (repo *CacheCodeRepository) Store(ctx context.Context, biz, phone, code string) error {
 	return repo.cache.Set(ctx, biz, phone, code)
 }
 
-func (repo *CodeRedisRepository) Verify(ctx context.Context, biz, phone, inputCode string) (bool, error) {
+func (repo *CacheCodeRepository) Verify(ctx context.Context, biz, phone, inputCode string) (bool, error) {
 	return repo.cache.Verify(ctx, biz, phone, inputCode)
 }
