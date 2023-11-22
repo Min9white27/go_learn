@@ -18,9 +18,9 @@ type UserRepository interface {
 	Create(ctx context.Context, u domain.User) error
 	FindByEmail(ctx context.Context, email string) (domain.User, error)
 	FindByPhone(ctx context.Context, phone string) (domain.User, error)
-	FindByIdV1(ctx context.Context, uid interface{}) (domain.User, error)
+	// FindById FindByIdV1(ctx context.Context, uid interface{}) (domain.User, error)
 	FindById(ctx context.Context, id int64) (domain.User, error)
-	UpdateNonZeroFields(ctx context.Context, user domain.User) error
+	//UpdateNonZeroFields(ctx context.Context, user domain.User) error
 }
 
 type CacheUserRepository struct {
@@ -57,20 +57,20 @@ func (r *CacheUserRepository) FindByPhone(ctx context.Context, phone string) (do
 	return r.entityToDomain(u), nil
 }
 
-func (r *CacheUserRepository) FindByIdV1(ctx context.Context, uid interface{}) (domain.User, error) {
-	//先从 cache 缓存里面找
-	//再从 dao 里面找
-	//找到了回写 cache 缓存
-	u, err := r.dao.FindByIdV1(ctx, uid)
-	if err != nil {
-		return domain.User{}, err
-	}
-	return r.entityToDomain(u), nil
-}
+//func (r *CacheUserRepository) FindByIdV1(ctx context.Context, uid interface{}) (domain.User, error) {
+//	//先从 cache 缓存里面找
+//	//再从 dao 里面找
+//	//找到了回写 cache 缓存
+//	u, err := r.dao.FindByIdV1(ctx, uid)
+//	if err != nil {
+//		return domain.User{}, err
+//	}
+//	return r.entityToDomain(u), nil
+//}
 
 func (r *CacheUserRepository) FindById(ctx context.Context, id int64) (domain.User, error) {
 	u, err := r.cache.Get(ctx, id)
-	if err != nil {
+	if err == nil {
 		//	必然有数据
 		return u, nil
 	}
@@ -86,16 +86,18 @@ func (r *CacheUserRepository) FindById(ctx context.Context, id int64) (domain.Us
 
 	u = r.entityToDomain(ue)
 
-	// 使用 Redis 一定会出现数据不一致性，无可避免
-	go func() {
-		err = r.cache.Set(ctx, u)
-		if err != nil {
-			//	打日志，做监控就行，不需要下面这句。原因是缓存设置失败，问题不大。做监控是为了防止 Redis 崩了
-			//	return domain.User{},err
-		}
-	}()
+	_ = r.cache.Set(ctx, u)
 
-	return u, err
+	// 使用 Redis 一定会出现数据不一致性，无可避免
+	//go func() {
+	//	err = r.cache.Set(ctx, u)
+	//	if err != nil {
+	//		//	打日志，做监控就行，不需要下面这句。原因是缓存设置失败，问题不大。做监控是为了防止 Redis 崩了
+	//		//	return domain.User{},err
+	//	}
+	//}()
+
+	return u, nil
 
 	// err = io.EOF
 	// 要不要去数据库加载？不加载，然而这个 err 只是偶然发生的错误，不太友好；加载，可能会搞崩数据库。
@@ -110,20 +112,20 @@ func (r *CacheUserRepository) FindById(ctx context.Context, id int64) (domain.Us
 	// 缓存出错了，你也不知道有没有数据
 }
 
-func (r *CacheUserRepository) UpdateNonZeroFields(ctx context.Context, user domain.User) error {
-	return r.dao.UpdateByUid(ctx, r.domainToEntity(user))
-}
+//func (r *CacheUserRepository) UpdateNonZeroFields(ctx context.Context, user domain.User) error {
+//	return r.dao.UpdateByUid(ctx, r.domainToEntity(user))
+//}
 
 func (r *CacheUserRepository) entityToDomain(u dao.User) domain.User {
 	return domain.User{
-		Id:              u.Id,
-		Email:           u.Email.String,
-		Password:        u.Password,
-		Phone:           u.Phone.String,
-		Nickname:        u.Nickname,
-		Birthday:        time.UnixMilli(u.Birthday),
-		PersonalProfile: u.PersonalProfile,
-		Ctime:           time.UnixMilli(u.Ctime),
+		Id:       u.Id,
+		Email:    u.Email.String,
+		Password: u.Password,
+		Phone:    u.Phone.String,
+		//Nickname:        u.Nickname,
+		//Birthday:        time.UnixMilli(u.Birthday),
+		//PersonalProfile: u.PersonalProfile,
+		Ctime: time.UnixMilli(u.Ctime),
 	}
 }
 
@@ -139,10 +141,10 @@ func (r *CacheUserRepository) domainToEntity(u domain.User) dao.User {
 			String: u.Phone,
 			Valid:  u.Phone != "",
 		},
-		Password:        u.Password,
-		Nickname:        u.Nickname,
-		Birthday:        u.Birthday.UnixMilli(),
-		PersonalProfile: u.PersonalProfile,
-		Ctime:           u.Ctime.UnixMilli(),
+		Password: u.Password,
+		//Nickname:        u.Nickname,
+		//Birthday:        u.Birthday.UnixMilli(),
+		//PersonalProfile: u.PersonalProfile,
+		Ctime: u.Ctime.UnixMilli(),
 	}
 }

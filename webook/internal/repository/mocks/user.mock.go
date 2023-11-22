@@ -83,21 +83,6 @@ func (mr *MockUserRepositoryMockRecorder) FindById(ctx, id any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindById", reflect.TypeOf((*MockUserRepository)(nil).FindById), ctx, id)
 }
 
-// FindByIdV1 mocks base method.
-func (m *MockUserRepository) FindByIdV1(ctx context.Context, uid any) (domain.User, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindByIdV1", ctx, uid)
-	ret0, _ := ret[0].(domain.User)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// FindByIdV1 indicates an expected call of FindByIdV1.
-func (mr *MockUserRepositoryMockRecorder) FindByIdV1(ctx, uid any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByIdV1", reflect.TypeOf((*MockUserRepository)(nil).FindByIdV1), ctx, uid)
-}
-
 // FindByPhone mocks base method.
 func (m *MockUserRepository) FindByPhone(ctx context.Context, phone string) (domain.User, error) {
 	m.ctrl.T.Helper()
@@ -111,18 +96,4 @@ func (m *MockUserRepository) FindByPhone(ctx context.Context, phone string) (dom
 func (mr *MockUserRepositoryMockRecorder) FindByPhone(ctx, phone any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByPhone", reflect.TypeOf((*MockUserRepository)(nil).FindByPhone), ctx, phone)
-}
-
-// UpdateNonZeroFields mocks base method.
-func (m *MockUserRepository) UpdateNonZeroFields(ctx context.Context, user domain.User) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateNonZeroFields", ctx, user)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// UpdateNonZeroFields indicates an expected call of UpdateNonZeroFields.
-func (mr *MockUserRepositoryMockRecorder) UpdateNonZeroFields(ctx, user any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateNonZeroFields", reflect.TypeOf((*MockUserRepository)(nil).UpdateNonZeroFields), ctx, user)
 }

@@ -18,9 +18,9 @@ type UserDAO interface {
 	Insert(ctx context.Context, u User) error
 	FindByEmail(ctx context.Context, email string) (User, error)
 	FindByPhone(ctx context.Context, phone string) (User, error)
-	FindByIdV1(ctx context.Context, uid interface{}) (User, error)
+	// FindById FindByIdV1(ctx context.Context, uid interface{}) (User, error)
 	FindById(ctx context.Context, id int64) (User, error)
-	UpdateByUid(ctx context.Context, entity User) error
+	//UpdateByUid(ctx context.Context, entity User) error
 }
 
 type GORMUserDAO struct {
@@ -63,11 +63,11 @@ func (dao *GORMUserDAO) FindByPhone(ctx context.Context, phone string) (User, er
 	return u, err
 }
 
-func (dao *GORMUserDAO) FindByIdV1(ctx context.Context, uid interface{}) (User, error) {
-	var u User
-	err := dao.db.WithContext(ctx).Where("id = ?", uid).First(&u).Error
-	return u, err
-}
+//func (dao *GORMUserDAO) FindByIdV1(ctx context.Context, uid interface{}) (User, error) {
+//	var u User
+//	err := dao.db.WithContext(ctx).Where("id = ?", uid).First(&u).Error
+//	return u, err
+//}
 
 func (dao *GORMUserDAO) FindById(ctx context.Context, id int64) (User, error) {
 	var u User
@@ -75,15 +75,15 @@ func (dao *GORMUserDAO) FindById(ctx context.Context, id int64) (User, error) {
 	return u, err
 }
 
-func (dao *GORMUserDAO) UpdateByUid(ctx context.Context, entity User) error {
-	return dao.db.WithContext(ctx).Model(&entity).Where("id = ?", entity.Id).
-		Updates(map[string]any{
-			"utime":            time.Now().UnixMilli(),
-			"nickname":         entity.Nickname,
-			"birthday":         entity.Birthday,
-			"personal_profile": entity.PersonalProfile,
-		}).Error
-}
+//func (dao *GORMUserDAO) UpdateByUid(ctx context.Context, entity User) error {
+//	return dao.db.WithContext(ctx).Model(&entity).Where("id = ?", entity.Id).
+//		Updates(map[string]any{
+//			"utime":            time.Now().UnixMilli(),
+//			"nickname":         entity.Nickname,
+//			"birthday":         entity.Birthday,
+//			"personal_profile": entity.PersonalProfile,
+//		}).Error
+//}
 
 // User 直接对应于数据库表结构
 // 有些人叫做 entity,有些人叫做 model 也有人叫做 PO(persistent object)
@@ -103,11 +103,11 @@ type User struct {
 
 	// 	往这里面加
 	//`gorm:"type=varchar(128)"`
-	Nickname string
-	Birthday int64
+	//Nickname string
+	//Birthday int64
 	// 指定是 varchar 这个类型的，并且长度是 1024
 	//`gorm:"type=varchar(4096)"`
-	PersonalProfile string
+	//PersonalProfile string
 
 	//创建时间，毫秒数
 	Ctime int64

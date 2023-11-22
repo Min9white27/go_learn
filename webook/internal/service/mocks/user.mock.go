@@ -39,21 +39,6 @@ func (m *MockUserService) EXPECT() *MockUserServiceMockRecorder {
 	return m.recorder
 }
 
-// FindById mocks base method.
-func (m *MockUserService) FindById(ctx context.Context, uid any) (domain.User, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindById", ctx, uid)
-	ret0, _ := ret[0].(domain.User)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// FindById indicates an expected call of FindById.
-func (mr *MockUserServiceMockRecorder) FindById(ctx, uid any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindById", reflect.TypeOf((*MockUserService)(nil).FindById), ctx, uid)
-}
-
 // FindOrCreate mocks base method.
 func (m *MockUserService) FindOrCreate(ctx context.Context, phone string) (domain.User, error) {
 	m.ctrl.T.Helper()
@@ -111,18 +96,4 @@ func (m *MockUserService) SignUp(ctx context.Context, u domain.User) error {
 func (mr *MockUserServiceMockRecorder) SignUp(ctx, u any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SignUp", reflect.TypeOf((*MockUserService)(nil).SignUp), ctx, u)
-}
-
-// UpdateNonSensitiveInfo mocks base method.
-func (m *MockUserService) UpdateNonSensitiveInfo(ctx context.Context, user domain.User) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateNonSensitiveInfo", ctx, user)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// UpdateNonSensitiveInfo indicates an expected call of UpdateNonSensitiveInfo.
-func (mr *MockUserServiceMockRecorder) UpdateNonSensitiveInfo(ctx, user any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateNonSensitiveInfo", reflect.TypeOf((*MockUserService)(nil).UpdateNonSensitiveInfo), ctx, user)
 }

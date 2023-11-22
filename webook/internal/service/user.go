@@ -14,8 +14,8 @@ var ErrInvalidUserOrPassword = errors.New("邮箱或密码不正确")
 type UserService interface {
 	SignUp(ctx context.Context, u domain.User) error
 	Login(ctx context.Context, email, password string) (domain.User, error)
-	UpdateNonSensitiveInfo(ctx context.Context, user domain.User) error
-	FindById(ctx context.Context, uid interface{}) (domain.User, error)
+	// FindOrCreate UpdateNonSensitiveInfo(ctx context.Context, user domain.User) error
+	//FindById(ctx context.Context, uid interface{}) (domain.User, error)
 	FindOrCreate(ctx context.Context, phone string) (domain.User, error)
 	Profile(ctx context.Context, id int64) (domain.User, error)
 }
@@ -59,13 +59,13 @@ func (svc *userService) Login(ctx context.Context, email, password string) (doma
 	return u, nil
 }
 
-func (svc *userService) UpdateNonSensitiveInfo(ctx context.Context, user domain.User) error {
-	return svc.repo.UpdateNonZeroFields(ctx, user)
-}
+//func (svc *userService) UpdateNonSensitiveInfo(ctx context.Context, user domain.User) error {
+//	return svc.repo.UpdateNonZeroFields(ctx, user)
+//}
 
-func (svc *userService) FindById(ctx context.Context, uid interface{}) (domain.User, error) {
-	return svc.repo.FindByIdV1(ctx, uid)
-}
+//func (svc *userService) FindById(ctx context.Context, uid interface{}) (domain.User, error) {
+//	return svc.repo.FindByIdV1(ctx, uid)
+//}
 
 func (svc *userService) FindOrCreate(ctx context.Context, phone string) (domain.User, error) {
 	u, err := svc.repo.FindByPhone(ctx, phone)
