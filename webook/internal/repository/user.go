@@ -26,6 +26,7 @@ type UserRepository interface {
 type CacheUserRepository struct {
 	dao   dao.UserDAO
 	cache cache.UserCache
+	//testSignal chan struct{}
 }
 
 func NewUserRepository(dao dao.UserDAO, c cache.UserCache) UserRepository {
@@ -70,7 +71,7 @@ func (r *CacheUserRepository) FindByIdV1(ctx context.Context, uid interface{}) (
 
 func (r *CacheUserRepository) FindById(ctx context.Context, id int64) (domain.User, error) {
 	u, err := r.cache.Get(ctx, id)
-	if err != nil {
+	if err == nil {
 		//	必然有数据
 		return u, nil
 	}
@@ -86,16 +87,19 @@ func (r *CacheUserRepository) FindById(ctx context.Context, id int64) (domain.Us
 
 	u = r.entityToDomain(ue)
 
+	//_ = r.cache.Set(ctx, u)
+
 	// 使用 Redis 一定会出现数据不一致性，无可避免
 	go func() {
-		err = r.cache.Set(ctx, u)
-		if err != nil {
-			//	打日志，做监控就行，不需要下面这句。原因是缓存设置失败，问题不大。做监控是为了防止 Redis 崩了
-			//	return domain.User{},err
-		}
+		_ = r.cache.Set(ctx, u)
+		//	if err != nil {
+		//		//	打日志，做监控就行，不需要下面这句。原因是缓存设置失败，问题不大。做监控是为了防止 Redis 崩了
+		//		//	return domain.User{},err
+		//	}
+		//r.testSignal <- struct{}{}
 	}()
 
-	return u, err
+	return u, nil
 
 	// err = io.EOF
 	// 要不要去数据库加载？不加载，然而这个 err 只是偶然发生的错误，不太友好；加载，可能会搞崩数据库。
