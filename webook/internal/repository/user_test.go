@@ -23,7 +23,7 @@ func TestCacheUserRepository_FindById(t *testing.T) {
 	now = time.UnixMilli(now.UnixMilli())
 	testCases := []struct {
 		name string
-		mock func(ctrl *gomock.Controller) (dao dao.UserDAO, cache cache.UserCache)
+		mock func(ctrl *gomock.Controller) (dao.UserDAO, cache.UserCache)
 
 		ctx context.Context
 		id  int64
