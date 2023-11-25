@@ -1,6 +1,6 @@
 //go:build wireinject
 
-package main
+package integration
 
 import (
 	"gitee.com/geekbang/basic-go/webook/internal/repository"

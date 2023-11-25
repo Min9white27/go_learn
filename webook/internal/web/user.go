@@ -62,8 +62,8 @@ func (u *UserHandler) RegisterRoutes(server *gin.Engine) {
 	// PUT "/login/sms/code" 发送验证码
 	// POST “/login/sms/code” 校验验证码
 	// /sms/login/code /code/sms
-	ug.POST("login_sms/code/send", u.SendLoginSMSCode)
-	ug.POST("login_sms", u.LoginSMS)
+	ug.POST("/login_sms/code/send", u.SendLoginSMSCode)
+	ug.POST("/login_sms", u.LoginSMS)
 
 }
 
