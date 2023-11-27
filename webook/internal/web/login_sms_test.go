@@ -159,20 +159,20 @@ func TestUserHandler_LoginSMS(t *testing.T) {
 
 			//	构造 HTTP 响应
 			resp := httptest.NewRecorder()
+			//	如何测试 setJWTToken 这部分
 			//server.Use(func(ctx *gin.Context) {
 			//	ctx.Set("user", UserClaims{
 			//		Uid: 123,
 			//	})
+			//uc := ctx.MustGet("user").(UserClaims)
+			//err = h.setJWTToken(ctx, uc.Uid)
+			//if err != nil {
+			//	return
+			//}
 			//})
 			//	HTTP 请求 进入到 gin 框架，这样调用，gin 就会处理这个请求
 			//	请求后的响应写会到 resp
 			server.ServeHTTP(resp, req)
-
-			//server.GET("user", func(ctx *gin.Context) {
-			//
-			//})
-
-			//err := h.setJWTToken(server)
 
 			//	比较 http 响应码
 			assert.Equal(t, tc.wantCode, resp.Code)
