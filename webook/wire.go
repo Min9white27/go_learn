@@ -33,6 +33,7 @@ func InitWebServer() *gin.Engine {
 		// 初始化 UserHandler
 		web.NewUserHandler,
 		web.NewOAuth2WechatHandler,
+		ioc.NewWechatHandlerConfig,
 
 		// 中间件呢？
 		// 注册路由呢？
