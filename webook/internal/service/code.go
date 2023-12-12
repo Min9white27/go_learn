@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"gitee.com/geekbang/basic-go/webook/internal/repository"
 	"gitee.com/geekbang/basic-go/webook/internal/service/sms"
+	"go.uber.org/atomic"
 	"math/rand"
 )
 
-const codeTPlId = "1877556"
+// const codeTPlId = "1877556"
+var codeTplId atomic.String = atomic.String{}
 
 var (
 	ErrCodeSendTooMany        = repository.ErrCodeSendTooMany
@@ -27,6 +29,12 @@ type codeService struct {
 }
 
 func NewCodeService(repo repository.CodeRepository, smsSvc sms.Service) CodeService {
+
+	codeTplId.Store("1877556")
+	//viper.OnConfigChange(func(in fsnotify.Event) {
+	//	codeTplId.Store(viper.GetString("code.tpl.id"))
+	//})
+
 	return &codeService{
 		repo:   repo,
 		smsSvc: smsSvc,
@@ -44,7 +52,8 @@ func (svc *codeService) Send(ctx context.Context,
 		return err
 	}
 	//	发送出去
-	err = svc.smsSvc.Send(ctx, codeTPlId, []string{code}, phone)
+	//err = svc.smsSvc.Send(ctx, codeTplId, []string{code}, phone)
+	err = svc.smsSvc.Send(ctx, codeTplId.Load(), []string{code}, phone)
 	if err != nil {
 		//  这意味着，Redis 有这个验证码
 		//  这个 err 可能是超时的 err，所以这个 err 的发送状态并不能确定，有可能已经发送出去了

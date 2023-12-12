@@ -10,9 +10,19 @@ import (
 	"time"
 )
 
+// 技术选型考虑的点
+//  1. 功能性：功能是否能够完全覆盖你的需求。
+//  2. 社区和支持度：社区是否活跃，文档是否齐全，
+//     以及百度（搜索引擎）能不能搜索到你需要的各种信息，有没有帮你踩过坑
+//  3. 非功能性：易用性（用户友好度，学习曲线要平滑），
+//     扩展性（如果开源软件的某些功能需要定制，框架是否支持定制，以及定制的难度高不高）
+//     性能（追求性能的公司，往往有能力自研）
+
 type CodeLocalCache struct {
 	lruCache *lru.Cache[string, any]
 	lock     sync.Mutex
+	//rwLock     sync.RWMutex
+	//maps       sync.Map
 	// 过期时间
 	expiration time.Duration
 }
@@ -31,6 +41,19 @@ func (l *CodeLocalCache) Set(ctx context.Context, biz, phone, code string) error
 	defer l.lock.Unlock()
 
 	key := l.key(biz, phone)
+
+	// 如果你的 key 非常多，这个 maps 本身就占据了很多内存
+	//lock, _ := l.maps.LoadOrStore(key, &sync.Mutex{})
+	//lock.(*sync.Mutex).Lock()
+	//defer lock.(*sync.Mutex).Unlock()
+
+	//lock, _ := l.maps.LoadOrStore(key, &sync.Mutex{})
+	//lock.(*sync.Mutex).Lock()
+	//defer func() {
+	//	l.maps.Delete(key)
+	//	lock.(*sync.Mutex).Unlock()
+	//}()
+
 	now := time.Now()
 
 	val, ok := l.lruCache.Get(key)
