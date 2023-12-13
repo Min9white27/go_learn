@@ -2,7 +2,7 @@ package middleware
 
 import (
 	"gitee.com/geekbang/basic-go/webook/internal/web"
-	ijwt "gitee.com/geekbang/basic-go/webook/internal/web/jwt"
+	"gitee.com/geekbang/basic-go/webook/internal/web/jwt"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"net/http"

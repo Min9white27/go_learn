@@ -30,6 +30,7 @@ require (
 	github.com/stretchr/testify v1.8.4
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common v1.0.777
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/sms v1.0.777
+	go.uber.org/atomic v1.9.0
 	go.uber.org/mock v0.3.0
 	golang.org/x/crypto v0.16.0
 	gorm.io/driver/mysql v1.5.1
@@ -119,7 +120,6 @@ require (
 	go.etcd.io/etcd/client/v2 v2.305.10 // indirect
 	go.etcd.io/etcd/client/v3 v3.5.10 // indirect
 	go.opencensus.io v0.24.0 // indirect
-	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.9.0 // indirect
 	go.uber.org/zap v1.21.0 // indirect
 	golang.org/x/arch v0.5.0 // indirect
