@@ -10,6 +10,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/pkg/errors"
 	"github.com/redis/go-redis/v9"
+	"go.uber.org/zap"
 	"net/http"
 	"time"
 )
@@ -95,6 +96,11 @@ func (u *UserHandler) RefreshToken(ctx *gin.Context) {
 	err = u.SetJWTToken(ctx, rc.Uid, rc.Ssid)
 	if err != nil {
 		ctx.AbortWithStatus(http.StatusUnauthorized)
+		// 这种含糊的日志，尽量少打，信息量不足
+		zap.L().Error("系统异常", zap.Error(err))
+		// 正常来说，msg 的部分就应该包含足够的定位信息
+		zap.L().Error("ijoihpidf 设置 JWT token 出现异常", zap.Error(err),
+			zap.String("method", "UserHandler:RefreshToken"))
 		return
 	}
 	ctx.JSON(http.StatusOK, Result{
@@ -279,10 +285,12 @@ func (u *UserHandler) SendLoginSMSCode(ctx *gin.Context) {
 			Msg: "发送成功",
 		})
 	case service.ErrCodeSendTooMany:
+		zap.L().Warn("短信发送太频繁", zap.Error(err))
 		ctx.JSON(http.StatusOK, Result{
 			Msg: "发送太频繁，请稍后再试",
 		})
 	default:
+		zap.L().Error("短信发送失败", zap.Error(err))
 		ctx.JSON(http.StatusOK, Result{
 			Code: 5,
 			Msg:  "系统错误",
@@ -305,6 +313,13 @@ func (u *UserHandler) LoginSMS(ctx *gin.Context) {
 			Code: 5,
 			Msg:  "系统错误",
 		})
+		zap.L().Error("校验验证码出错", zap.Error(err),
+			// 不能这样打，因为手机号码是敏感数据，你不能达到日志里面
+			// 打印加密后的串
+			// 脱敏，152****1234
+			zap.String("手机号码", req.Phone))
+		// 最多最多就这样
+		zap.L().Debug("", zap.String("手机号码", req.Phone))
 		return
 	}
 	if !ok {

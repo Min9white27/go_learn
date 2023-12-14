@@ -55,6 +55,7 @@ func (svc *codeService) Send(ctx context.Context,
 	//err = svc.smsSvc.Send(ctx, codeTplId, []string{code}, phone)
 	err = svc.smsSvc.Send(ctx, codeTplId.Load(), []string{code}, phone)
 	if err != nil {
+		err = fmt.Errorf("发送短信出现异常 %w", err)
 		//  这意味着，Redis 有这个验证码
 		//  这个 err 可能是超时的 err，所以这个 err 的发送状态并不能确定，有可能已经发送出去了
 		//	要重试的话，初始化的时候，传入一个自己就会重试的 smsSvc

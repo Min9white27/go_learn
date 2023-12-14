@@ -5,6 +5,8 @@ import (
 	"errors"
 	"gitee.com/geekbang/basic-go/webook/internal/domain"
 	"gitee.com/geekbang/basic-go/webook/internal/repository"
+	"gitee.com/geekbang/basic-go/webook/pkg/logger"
+	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -23,11 +25,21 @@ type UserService interface {
 
 type userService struct {
 	repo repository.UserRepository
+	l    logger.LoggerV1
 }
 
-func NewUserService(repo repository.UserRepository) UserService {
+func NewUserService(repo repository.UserRepository, l logger.LoggerV1) UserService {
 	return &userService{
 		repo: repo,
+		l:    l,
+	}
+}
+
+func NewUserServiceV1(repo repository.UserRepository, l *zap.Logger) UserService {
+	return &userService{
+		repo: repo,
+		// 预留了变化空间
+		//logger: zap.L(),
 	}
 }
 
@@ -77,6 +89,11 @@ func (svc *userService) FindOrCreate(ctx context.Context, phone string) (domain.
 		// nil 和不为 ErrUserNotFound 的都会进来
 		return u, err
 	}
+	// 这里的手机号码，要脱敏之后打出来
+	//zap.L().Info("用户未注册", zap.String("phone", phone))
+	//svc.logger.Info("用户未注册", zap.String("phone", phone))
+	//loggerxx.Logger.Info("用户未注册", zap.String("phone", phone))
+	svc.l.Info("用户未注册", logger.String("phone", phone))
 	// 在系统资源不足，触发降级后，不执行慢路径了
 	//if ctx.Value("降级") == "true"{
 	//	return domain.User{},errors.New("系统降级了")
