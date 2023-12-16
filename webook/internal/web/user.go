@@ -487,3 +487,10 @@ func (u *UserHandler) Profile(ctx *gin.Context) {
 	})
 
 }
+
+//func (u *UserHandler) Do(fn func(ctx *gin.Context) (any, error)) {
+//	data, err := fn(ctx)
+//	if err != nil {
+// 在这里打日志
+//	}
+//}
