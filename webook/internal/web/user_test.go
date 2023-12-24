@@ -7,6 +7,7 @@ import (
 	"gitee.com/geekbang/basic-go/webook/internal/domain"
 	"gitee.com/geekbang/basic-go/webook/internal/service"
 	svcmocks "gitee.com/geekbang/basic-go/webook/internal/service/mocks"
+	ijwt "gitee.com/geekbang/basic-go/webook/internal/web/jwt"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -32,7 +33,7 @@ func TestNil(t *testing.T) {
 }
 
 func testTypeAssert(c any) {
-	_, ok := c.(*UserClaims)
+	_, ok := c.(*ijwt.UserClaims)
 	println(ok)
 }
 
@@ -180,7 +181,7 @@ func TestUserHandler_SignUp(t *testing.T) {
 
 			// 注册路由
 			server := gin.Default()
-			h := NewUserHandler(tc.mock(ctrl), nil)
+			h := NewUserHandler(tc.mock(ctrl), nil, nil)
 			h.RegisterRoutes(server)
 
 			req, err := http.NewRequest(http.MethodPost, "/users/signup", bytes.NewBuffer([]byte(tc.reqBody)))
