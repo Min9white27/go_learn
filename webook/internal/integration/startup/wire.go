@@ -7,6 +7,8 @@ import (
 	"gitee.com/geekbang/basic-go/webook/internal/repository/cache"
 	"gitee.com/geekbang/basic-go/webook/internal/repository/dao"
 	"gitee.com/geekbang/basic-go/webook/internal/service"
+	"gitee.com/geekbang/basic-go/webook/internal/service/sms"
+	"gitee.com/geekbang/basic-go/webook/internal/service/sms/async"
 	"gitee.com/geekbang/basic-go/webook/internal/web"
 	ijwt "gitee.com/geekbang/basic-go/webook/internal/web/jwt"
 	"gitee.com/geekbang/basic-go/webook/ioc"
@@ -73,4 +75,12 @@ func InitUserSvc() service.UserService {
 func InitJwtHdl() ijwt.Handler {
 	wire.Build(thirdProvider, ijwt.NewRedisJWTHandler)
 	return ijwt.NewRedisJWTHandler(nil)
+}
+
+func InitAsyncSmsService(svc sms.Service) *async.Service {
+	wire.Build(thirdProvider, repository.NewAsyncSMSRepository,
+		dao.NewGORMAsyncSmsDAO,
+		async.NewService,
+	)
+	return &async.Service{}
 }

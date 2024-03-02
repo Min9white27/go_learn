@@ -93,6 +93,49 @@ func (s *ArticleTestSuite) TestEdit() {
 				Data: 1,
 			},
 		},
+		{
+			name: "修改已有帖子，并保存",
+			before: func(t *testing.T) {
+				// 提前准备数据
+				err := s.db.Create(dao.Article{
+					Id:       2,
+					Title:    "我的标题",
+					Content:  "我的内容",
+					AuthorId: 123,
+					// 跟时间有关的测试，不是逼不得已，不要用 time.Now()
+					// 因为 time.Now() 每次运行都不同，你很难断言
+					Ctime: 123,
+					Utime: 234,
+				}).Error
+				assert.NoError(t, err)
+			},
+			after: func(t *testing.T) {
+				//	验证数据库
+				var art dao.Article
+				err := s.db.Where("id=?", "2").First(&art).Error
+				assert.NoError(t, err)
+				// 是为了确保我更新了 Utime
+				assert.True(t, art.Utime > 234)
+				art.Utime = 0
+				assert.Equal(t, dao.Article{
+					Id:       2,
+					Title:    "新的标题",
+					Content:  "新的内容",
+					AuthorId: 123,
+					Ctime:    123,
+				}, art)
+			},
+			art: Article{
+				Id:      2,
+				Title:   "新的标题",
+				Content: "新的内容",
+			},
+			wantCode: http.StatusOK,
+			wantRes: Result[int64]{
+				Msg:  "ok",
+				Data: 2,
+			},
+		},
 	}
 
 	for _, tc := range testCase {
@@ -142,6 +185,7 @@ func TestArticle(t *testing.T) {
 }
 
 type Article struct {
+	Id      int64  `json:"id"`
 	Title   string `json:"title"`
 	Content string `json:"content"`
 }

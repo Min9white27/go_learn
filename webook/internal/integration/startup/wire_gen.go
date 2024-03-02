@@ -11,6 +11,8 @@ import (
 	"gitee.com/geekbang/basic-go/webook/internal/repository/cache"
 	"gitee.com/geekbang/basic-go/webook/internal/repository/dao"
 	"gitee.com/geekbang/basic-go/webook/internal/service"
+	"gitee.com/geekbang/basic-go/webook/internal/service/sms"
+	"gitee.com/geekbang/basic-go/webook/internal/service/sms/async"
 	"gitee.com/geekbang/basic-go/webook/internal/web"
 	"gitee.com/geekbang/basic-go/webook/internal/web/jwt"
 	"gitee.com/geekbang/basic-go/webook/ioc"
@@ -71,6 +73,15 @@ func InitJwtHdl() ijwt.Handler {
 	cmdable := InitRedis()
 	handler := ijwt.NewRedisJWTHandler(cmdable)
 	return handler
+}
+
+func InitAsyncSmsService(svc sms.Service) *async.Service {
+	gormDB := InitTestDB()
+	asyncSmsDAO := dao.NewGORMAsyncSmsDAO(gormDB)
+	asyncSmsRepository := repository.NewAsyncSMSRepository(asyncSmsDAO)
+	loggerV1 := InitLog()
+	asyncService := async.NewService(svc, asyncSmsRepository, loggerV1)
+	return asyncService
 }
 
 // wire.go:
